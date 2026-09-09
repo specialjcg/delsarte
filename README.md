@@ -8,6 +8,7 @@ certificats qui en découlent.
 | Composant | État |
 |---|---|
 | Dualité faible pour un LP fini | **démontré** — `Delsarte/LP/WeakDuality.lean` |
+| `A(n,d)`, distance minimale, distribution de distances | **démontré** — `Delsarte/Code/Basic.lean` |
 | Polynômes de Krawtchouk | à faire |
 | LP de Delsarte (schéma de Hamming) | à faire |
 | Réalisabilité primale d'une distribution de distances | à faire |
@@ -15,8 +16,8 @@ certificats qui en découlent.
 | Polynômes de Gegenbauer, LP sur la sphère | à faire |
 | Kissing number en dimensions 8 et 24 | à faire |
 
-Rien d'autre que la dualité faible n'est démontré à ce jour. Aucune borne sur
-`A(n,d)` ni sur le kissing number n'est établie par ce dépôt.
+Seules les définitions et la dualité faible sont démontrées à ce jour. Aucune
+borne sur `A(n,d)` ni sur le kissing number n'est établie par ce dépôt.
 
 ## Pourquoi la dualité faible suffit
 
