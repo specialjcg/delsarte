@@ -12,14 +12,18 @@ certificats qui en découlent.
 | Polynômes de Krawtchouk : définition, valeurs au bord, orthogonalité | **démontré** — `Delsarte/Krawtchouk/Basic.lean` |
 | Récurrence à trois termes des Krawtchouk | à faire |
 | LP de Delsarte (schéma de Hamming) : assemblage + borne conditionnelle | **démontré** — `Delsarte/Hamming/LP.lean` |
-| Réalisabilité primale d'une distribution de distances | à faire |
+| Réalisabilité primale d'une distribution de distances, **q = 2** | **démontré** — `Delsarte/Hamming/Feasible.lean` |
+| Borne de Delsarte sur `A(n,2,d)`, sans hypothèse | **démontré** — `Delsarte/Hamming/Feasible.lean` |
+| Réalisabilité primale pour `q > 2` | à faire |
 | Vérificateur de certificat sur ℚ | à faire |
 | Polynômes de Gegenbauer, LP sur la sphère | à faire |
 | Kissing number en dimensions 8 et 24 | à faire |
 
-Le LP de Delsarte lui-même n'est pas encore assemblé : ni sa réalisabilité
-primale, ni le vérificateur de certificat. Aucune borne sur `A(n,d)` ni sur le
-kissing number n'est établie par ce dépôt.
+Sur l'alphabet binaire, la chaîne est complète : tout `y` dual réalisable
+majore `A(n,2,d)`, sans hypothèse résiduelle. Ce qui manque encore est le
+**vérificateur de certificat** — rien dans ce dépôt ne produit ni ne contrôle
+un `y` concret, donc aucune borne numérique n'y est établie. Le cas `q > 2` et
+tout le volet sphère, donc le kissing number, restent à faire.
 
 ## Pourquoi la dualité faible suffit
 
