@@ -11,7 +11,7 @@ certificats qui en découlent.
 | `A(n,d)`, distance minimale, distribution de distances | **démontré** — `Delsarte/Code/Basic.lean` |
 | Polynômes de Krawtchouk : définition, valeurs au bord, orthogonalité | **démontré** — `Delsarte/Krawtchouk/Basic.lean` |
 | Récurrence à trois termes des Krawtchouk | à faire |
-| LP de Delsarte (schéma de Hamming) | à faire |
+| LP de Delsarte (schéma de Hamming) : assemblage + borne conditionnelle | **démontré** — `Delsarte/Hamming/LP.lean` |
 | Réalisabilité primale d'une distribution de distances | à faire |
 | Vérificateur de certificat sur ℚ | à faire |
 | Polynômes de Gegenbauer, LP sur la sphère | à faire |
