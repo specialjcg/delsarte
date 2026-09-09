@@ -1,1 +1,1 @@
-import Delsarte.Basic
+import Delsarte.LP.WeakDuality
