@@ -9,15 +9,17 @@ certificats qui en découlent.
 |---|---|
 | Dualité faible pour un LP fini | **démontré** — `Delsarte/LP/WeakDuality.lean` |
 | `A(n,d)`, distance minimale, distribution de distances | **démontré** — `Delsarte/Code/Basic.lean` |
-| Polynômes de Krawtchouk | à faire |
+| Polynômes de Krawtchouk : définition, valeurs au bord, orthogonalité | **démontré** — `Delsarte/Krawtchouk/Basic.lean` |
+| Récurrence à trois termes des Krawtchouk | à faire |
 | LP de Delsarte (schéma de Hamming) | à faire |
 | Réalisabilité primale d'une distribution de distances | à faire |
 | Vérificateur de certificat sur ℚ | à faire |
 | Polynômes de Gegenbauer, LP sur la sphère | à faire |
 | Kissing number en dimensions 8 et 24 | à faire |
 
-Seules les définitions et la dualité faible sont démontrées à ce jour. Aucune
-borne sur `A(n,d)` ni sur le kissing number n'est établie par ce dépôt.
+Le LP de Delsarte lui-même n'est pas encore assemblé : ni sa réalisabilité
+primale, ni le vérificateur de certificat. Aucune borne sur `A(n,d)` ni sur le
+kissing number n'est établie par ce dépôt.
 
 ## Pourquoi la dualité faible suffit
 
