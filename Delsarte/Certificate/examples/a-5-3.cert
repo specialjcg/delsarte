@@ -1,0 +1,7 @@
+# Certificat dual de Delsarte
+# Borne : A(5, 2, 3) <= 6.  Valeur vraie : 4.  Certificat valide, non serre.
+# Voir Delsarte/Certificate/FORMAT.md
+n 5
+q 2
+d 3
+y 1 0 0 0 0

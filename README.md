@@ -15,15 +15,20 @@ certificats qui en découlent.
 | Réalisabilité primale d'une distribution de distances, **q = 2** | **démontré** — `Delsarte/Hamming/Feasible.lean` |
 | Borne de Delsarte sur `A(n,2,d)`, sans hypothèse | **démontré** — `Delsarte/Hamming/Feasible.lean` |
 | Réalisabilité primale pour `q > 2` | à faire |
-| Vérificateur de certificat sur ℚ | à faire |
+| Vérificateur de certificat dual, exact sur ℚ | **démontré** — `Delsarte/Certificate/Verify.lean` |
+| Borne démontrée : `A(5,2,3) ≤ 6` | **démontré** — `Delsarte/Certificate/Verify.lean` |
+| Parseur de fichier certificat + exécutable de rejeu | à faire |
 | Polynômes de Gegenbauer, LP sur la sphère | à faire |
 | Kissing number en dimensions 8 et 24 | à faire |
 
-Sur l'alphabet binaire, la chaîne est complète : tout `y` dual réalisable
-majore `A(n,2,d)`, sans hypothèse résiduelle. Ce qui manque encore est le
-**vérificateur de certificat** — rien dans ce dépôt ne produit ni ne contrôle
-un `y` concret, donc aucune borne numérique n'y est établie. Le cas `q > 2` et
-tout le volet sphère, donc le kissing number, restent à faire.
+Sur l'alphabet binaire, la chaîne est complète de bout en bout : un vecteur de
+rationnels entre, une borne sur `A(n,2,d)` sort, et le solveur qui a produit le
+vecteur n'est nulle part dans la preuve. `A(5,2,3) ≤ 6` est démontré — première
+borne numérique du dépôt, `#print axioms` propre, sans `native_decide`.
+
+Ce qui reste : le cas `q > 2`, le parseur de fichier certificat, et tout le
+volet sphère — donc le kissing number, qui est l'objectif affiché. Aucune borne
+en dimension 8 ou 24 n'est établie ici.
 
 ## Pourquoi la dualité faible suffit
 
