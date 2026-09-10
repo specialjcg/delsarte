@@ -85,6 +85,8 @@ def certThirteen : ℕ → ℚ
   | _ => 0
 
 set_option maxHeartbeats 1000000 in
+-- nine dual constraints, each a sum of thirteen Krawtchouk values unfolded from
+-- the recurrence; exact rational arithmetic, no shortcut available
 theorem dualCert_certThirteen : DualCert 13 2 5 certThirteen := by
   constructor
   · intro k hk; fin_cases hk <;> norm_num [certThirteen]
@@ -94,6 +96,7 @@ theorem dualCert_certThirteen : DualCert 13 2 5 certThirteen := by
       norm_num [certThirteen, krawtchoukRec, Finset.sum_Icc_succ_top]
 
 set_option maxHeartbeats 1000000 in
+-- same unfolding, at i = 0
 theorem bound_certThirteen : bound 13 2 certThirteen = 64 := by
   rw [bound_eq_rec]
   norm_num [certThirteen, krawtchoukRec, Finset.sum_Icc_succ_top]
@@ -124,6 +127,8 @@ def certGolay : ℕ → ℚ
   | _ => 0
 
 set_option maxHeartbeats 4000000 in
+-- seventeen dual constraints, each a sum of twenty-three Krawtchouk values with
+-- denominators up to 2772; this is the largest exact check in the repository
 theorem dualCert_certGolay : DualCert 23 2 7 certGolay := by
   constructor
   · intro k hk; fin_cases hk <;> norm_num [certGolay]
@@ -133,6 +138,7 @@ theorem dualCert_certGolay : DualCert 23 2 7 certGolay := by
       norm_num [certGolay, krawtchoukRec, Finset.sum_Icc_succ_top]
 
 set_option maxHeartbeats 4000000 in
+-- same unfolding, at i = 0
 theorem bound_certGolay : bound 23 2 certGolay = 4096 := by
   rw [bound_eq_rec]
   norm_num [certGolay, krawtchoukRec, Finset.sum_Icc_succ_top]
@@ -160,6 +166,7 @@ def certGolayPerturbed : ℕ → ℚ :=
   fun k => if k = 2 then certGolay k - 1 / 10 ^ 30 else certGolay k
 
 set_option maxHeartbeats 1000000 in
+-- one constraint of the Golay size, with a 10^-30 perturbation carried exactly
 theorem not_dualCert_certGolayPerturbed : ¬ DualCert 23 2 7 certGolayPerturbed := by
   intro h
   have h2 := h.2 11 (by decide)

@@ -16,3 +16,7 @@ rev = "v4.33.1"
 
 [[lean_lib]]
 name = "Delsarte"
+
+[[lean_exe]]
+name = "delsarte-verify"
+root = "Main"

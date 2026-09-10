@@ -20,7 +20,7 @@ certificats qui en découlent.
 | Vérificateur de positivité sur intervalle, certificat SOS | **démontré** — `Delsarte/Certificate/Interval.lean` |
 | Bornes démontrées : `A(5,2,3) ≤ 4`, `A(13,2,5) ≤ 64`, `A(23,2,7) ≤ 4096` | **démontré** — `Delsarte/Certificate/Bounds.lean` |
 | Solveur LP exact en rationnels (hors base de confiance) | **livré** — `tools/delsarte_lp.py` |
-| Parseur de fichier certificat + exécutable de rejeu | à faire |
+| Parseur de fichier certificat + exécutable de rejeu | **livré** — `Delsarte/Certificate/Parse.lean`, `Main.lean` |
 | Polynômes de Gegenbauer : définition, normalisation, ancrage Chebyshev | **démontré** — `Delsarte/Gegenbauer/Basic.lean` |
 | LP d'Odlyzko–Sloane sur la sphère : borne conditionnelle | **démontré** — `Delsarte/Sphere/LP.lean` |
 | Positivité de Schoenberg `Σ G_k(⟨x_i,x_j⟩) ≥ 0`, degrés 0 et 1, toute dimension | **démontré** — `Delsarte/Sphere/LP.lean` |
@@ -109,6 +109,17 @@ délibéré : pas de bot de mise à jour. Une montée de version silencieuse de
 mathlib changerait ce que les preuves signifient sans que personne ne lise le
 diff.
 
+## Rejouer un certificat
+
+```bash
+lake exe delsarte-verify Delsarte/Certificate/examples/a-23-7.cert
+lake exe delsarte-verify --self-check
+```
+
+L'exécutable ne démontre rien : il rejoue. La preuve est le théorème Lean. Le
+`--self-check` compare chaque `.cert` livré au certificat défini en Lean, pour
+que les deux ne puissent pas diverger en silence.
+
 ## Ce que la CI garantit
 
 - Le build échoue si un fichier ne compile pas.
@@ -122,6 +133,10 @@ diff.
   CI.
 - Les contrôles négatifs sont des théorèmes. Ils échouent au build, pas dans un
   rapport que personne ne lit.
+- Chaque `.cert` livré est relu au build et comparé au certificat Lean de même
+  nom (`Delsarte/Certificate/Files.lean`). Lake ne suit pas les `.cert` comme
+  dépendances — vérifié, pas supposé — donc un build incrémental local peut
+  manquer une édition ; un build neuf, ce que fait la CI, ne le peut pas.
 
 ## Licence
 

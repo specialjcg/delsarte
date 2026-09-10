@@ -1,0 +1,7 @@
+# Contre-exemple deliberé, refere par Delsarte/Certificate/Files.lean.
+# Bien forme, donc le parseur l'accepte -- et le verificateur le rejette :
+# la pente duale a la distance 3 vaut 1/2, pas 1.
+n 5
+q 2
+d 3
+y 1/2 0 0 0 0

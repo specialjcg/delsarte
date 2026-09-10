@@ -81,3 +81,41 @@ Un exécutable ne démontre rien de toute façon. Les `#guard` de
 `Delsarte/Certificate/Verify.lean` font tourner le vérificateur compilé sur
 l'arithmétique rationnelle réelle à chaque build : c'est le rejeu. La preuve,
 elle, reste le théorème Lean.
+
+
+## Rejeu
+
+```bash
+lake exe delsarte-verify Delsarte/Certificate/examples/a-23-7.cert
+lake exe delsarte-verify --self-check
+```
+
+La première forme parse, exécute le vérificateur et affiche la revendication,
+**toujours accompagnée de `n`, `q`, `d`** : une borne sans ses paramètres n'est
+pas une borne. La seconde compare chaque fichier livré au certificat défini en
+Lean, et échoue s'ils divergent.
+
+L'exécutable **ne démontre rien**. La preuve est le théorème Lean dans
+`Delsarte/Certificate/Bounds.lean` ; ceci est le rejeu indépendant.
+
+Lier l'exécutable oblige à compiler mathlib en code natif, il n'est donc pas
+construit en CI. Les mêmes vérifications tournent au build via
+`Delsarte/Certificate/Files.lean`.
+
+## Strictesse du parseur
+
+Le parseur refuse, et `Delsarte/Certificate/Parse.lean` en fait des contrôles
+exécutés au build :
+
+- un décimal `0.5` ou un exposant `1e3` — un format incapable d'exprimer `0.5`
+  ne peut pas l'arrondir en silence ;
+- un dénominateur nul ;
+- un commentaire en fin de ligne de données : seuls les commentaires de ligne
+  entière existent, donc un `#` égaré est une erreur et non une queue ignorée ;
+- un nombre de valeurs `y` différent de `n` ;
+- les directives dans le désordre, en trop, manquantes, ou une clé inconnue ;
+- `d = 0`, `d > n`, `q < 2`.
+
+Parser et vérifier sont deux métiers : `y -1 0 0 0 0` est **accepté** par le
+parseur et **refusé** par le vérificateur. Le dépôt montre les deux modes
+d'échec.

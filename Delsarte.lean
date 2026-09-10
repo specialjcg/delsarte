@@ -10,3 +10,5 @@ import Delsarte.Sphere.LP
 import Delsarte.Sphere.Dim2
 import Delsarte.Sphere.DegreeTwo
 import Delsarte.Certificate.Bounds
+import Delsarte.Certificate.Parse
+import Delsarte.Certificate.Files
