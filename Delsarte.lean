@@ -5,3 +5,4 @@ import Delsarte.Hamming.LP
 import Delsarte.Hamming.Feasible
 import Delsarte.Certificate.Verify
 import Delsarte.Gegenbauer.Basic
+import Delsarte.Sphere.LP
