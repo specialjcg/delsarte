@@ -19,6 +19,7 @@ certificats qui en découlent.
 | Vérificateur de certificat dual, exact sur ℚ | **démontré** — `Delsarte/Certificate/Verify.lean` |
 | Vérificateur de positivité sur intervalle, certificat SOS | **démontré** — `Delsarte/Certificate/Interval.lean` |
 | Bornes démontrées : `A(5,2,3) ≤ 4`, `A(13,2,5) ≤ 64`, `A(23,2,7) ≤ 4096` | **démontré** — `Delsarte/Certificate/Bounds.lean` |
+| Table de 12 bornes supplémentaires, jusqu'à `A(24,2,8) ≤ 4096` | **démontré** — `Delsarte/Certificate/Table.lean` |
 | Solveur LP exact en rationnels (hors base de confiance) | **livré** — `tools/delsarte_lp.py` |
 | Parseur de fichier certificat + exécutable de rejeu | **livré** — `Delsarte/Certificate/Parse.lean`, `Main.lean` |
 | Polynômes de Gegenbauer : définition, normalisation, ancrage Chebyshev | **démontré** — `Delsarte/Gegenbauer/Basic.lean` |
@@ -40,6 +41,18 @@ sont établies : aucun code n'est construit, donc rien ici ne s'écrit `= 4096`.
 `A(13,2,5) ≤ 64` est le cas qui justifie la machinerie : la borne de Hamming ne
 donne que 89. C'est une borne que le programme linéaire gagne et que le
 dénombrement élémentaire n'atteint pas.
+
+`Delsarte/Certificate/Table.lean` en ajoute douze, de `A(6,2,3) ≤ 8` à
+`A(24,2,8) ≤ 4096` (code de Golay étendu, contre 7216 pour Hamming). Onze sont
+serrées ; la douzième, `A(12,2,5) ≤ 40`, ne l'est pas — la vraie valeur est 32 —
+et elle est gardée pour cette raison. Une table qui ne montrerait que ses succès
+serait de la réclame.
+
+Les déclarations de cette table sont **générées** par le solveur puis revérifiées
+par Lean, parce que recopier douze certificats à la main est le bon moyen
+d'introduire une faute qu'aucun théorème n'attraperait : un `y` erroné est
+généralement irréalisable, mais il peut aussi être réalisable et démontrer une
+borne *différente*, plus faible, sans que personne le voie.
 
 Du côté sphère, **la dimension 2 est complète et inconditionnelle** : au plus 8
 points unitaires du plan à produits scalaires deux à deux `≤ 1/2`, et au moins 6

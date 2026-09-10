@@ -4,7 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Jean-Charles Gouleau
 -/
 import Delsarte.Certificate.Parse
-import Delsarte.Certificate.Bounds
+import Delsarte.Certificate.Table
 
 /-!
 # The shipped certificate files, checked against Lean
@@ -59,6 +59,18 @@ set_option linter.hashCommand false
 #guard fileAgrees (include_str "examples/a-5-3-optimal.cert") 5 2 3 certFive
 #guard fileAgrees (include_str "examples/a-13-5.cert") 13 2 5 certThirteen
 #guard fileAgrees (include_str "examples/a-23-7.cert") 23 2 7 certGolay
+#guard fileAgrees (include_str "examples/a-6-3.cert") 6 2 3 cert6_3
+#guard fileAgrees (include_str "examples/a-7-4.cert") 7 2 4 cert7_4
+#guard fileAgrees (include_str "examples/a-8-4.cert") 8 2 4 cert8_4
+#guard fileAgrees (include_str "examples/a-10-5.cert") 10 2 5 cert10_5
+#guard fileAgrees (include_str "examples/a-11-5.cert") 11 2 5 cert11_5
+#guard fileAgrees (include_str "examples/a-12-5.cert") 12 2 5 cert12_5
+#guard fileAgrees (include_str "examples/a-13-3.cert") 13 2 3 cert13_3
+#guard fileAgrees (include_str "examples/a-14-5.cert") 14 2 5 cert14_5
+#guard fileAgrees (include_str "examples/a-15-5.cert") 15 2 5 cert15_5
+#guard fileAgrees (include_str "examples/a-12-6.cert") 12 2 6 cert12_6
+#guard fileAgrees (include_str "examples/a-15-6.cert") 15 2 6 cert15_6
+#guard fileAgrees (include_str "examples/a-24-8.cert") 24 2 8 cert24_8
 #guard fileParsesButFails (include_str "examples/bad-not-feasible.cert")
 
 end Delsarte.Certificate

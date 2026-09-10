@@ -177,3 +177,53 @@ if __name__ == "__main__":
         for n, d in ((5, 3), (17, 8), (23, 7), (24, 10), (13, 5)):
             report(n, d)
             print()
+
+
+def emit_lean(n, d, q=2):
+    """Print the Lean declarations and the .cert body for one certificate.
+
+    Transcribing a dozen certificates by hand is a good way to introduce a typo
+    that no theorem would catch, since a wrong `y` simply fails to be feasible --
+    or worse, is feasible and proves a different bound.  So the text is generated
+    here and re-checked by Lean; `Delsarte/Certificate/Files.lean` then pins the
+    `.cert` file to the Lean definition.
+    """
+    K, dists, opt, x, y = solve(n, d, q)
+    ok, bound, slacks = check(n, d, K, y, q)
+    assert ok, "the candidate failed its own re-verification"
+    assert bound.denominator == 1, f"bound {bound} is not an integer"
+    name = f"cert{n}_{d}"
+    heartbeats = 400000 * max(1, (n + 4) // 5)
+    lines = []
+    lines.append(f"/-- Certificate for `n = {n}`, `d = {d}`; the linear program's optimum. -/")
+    lines.append(f"def {name} : ℕ → ℚ")
+    for k in range(1, n + 1):
+        if y[k - 1] != 0:
+            lines.append(f"  | {k} => {y[k-1]}")
+    lines.append("  | _ => 0")
+    lines.append("")
+    lines.append(f"set_option maxHeartbeats {heartbeats} in")
+    lines.append(f"-- {n - d + 1} dual constraints, each a sum of {n} Krawtchouk values")
+    lines.append(f"theorem dualCert_{name} : DualCert {n} {q} {d} {name} := by")
+    lines.append("  constructor")
+    lines.append(f"  · intro k hk; fin_cases hk <;> norm_num [{name}]")
+    lines.append("  · intro i hi")
+    lines.append("    fin_cases hi <;>")
+    lines.append(f"      rw [dualSlack_eq_rec {n} {q} _ _ (by norm_num)] <;>")
+    lines.append(f"      norm_num [{name}, krawtchoukRec, Finset.sum_Icc_succ_top]")
+    lines.append("")
+    lines.append(f"set_option maxHeartbeats {heartbeats} in")
+    lines.append("-- the same unfolding, at i = 0")
+    lines.append(f"theorem bound_{name} : bound {n} {q} {name} = {bound} := by")
+    lines.append("  rw [bound_eq_rec]")
+    lines.append(f"  norm_num [{name}, krawtchoukRec, Finset.sum_Icc_succ_top]")
+    lines.append("")
+    lines.append(f"theorem A_{n}_{q}_{d}_le : A {n} {q} {d} ≤ {bound} :=")
+    lines.append(f"  A_le_of_dualCert (by norm_num) dualCert_{name} "
+                 f"(by rw [bound_{name}]; norm_num)")
+    print("\n".join(lines))
+    print()
+    cert = [f"n {n}", f"q {q}", f"d {d}", "y " + " ".join(str(v) for v in y)]
+    print("-- .cert body:")
+    print("\n".join("-- " + l for l in cert))
+    print()

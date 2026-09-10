@@ -12,3 +12,4 @@ import Delsarte.Sphere.DegreeTwo
 import Delsarte.Certificate.Bounds
 import Delsarte.Certificate.Parse
 import Delsarte.Certificate.Files
+import Delsarte.Certificate.Table

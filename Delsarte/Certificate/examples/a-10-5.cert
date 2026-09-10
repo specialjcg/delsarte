@@ -1,0 +1,7 @@
+# Certificat dual de Delsarte, produit par tools/delsarte_lp.py
+# Borne : A(10, 2, 5) <= 12.  Valeur vraie : 12 (serre).
+# Borne de Hamming pour comparaison : 18.
+n 10
+q 2
+d 5
+y 1 0 0 0 0 0 0 0 0 1

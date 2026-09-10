@@ -1,0 +1,7 @@
+# Certificat dual de Delsarte, produit par tools/delsarte_lp.py
+# Borne : A(24, 2, 8) <= 4096.  Valeur vraie : 4096 (serre).
+# Borne de Hamming pour comparaison : 7216.
+n 24
+q 2
+d 8
+y 1 1899761/3371616 104119/421452 1466405/17700984 94789/4425246 69857/23601312 0 0 0 0 0 0 0 0 0 0 0 47213/23601312 103097/8850492 547199/17700984 12329/210726 184085/3371616 0 0
