@@ -1,0 +1,8 @@
+# Certificat dual de Delsarte
+# Borne : A(23, 2, 7) <= 4096.  Valeur vraie : 4096, atteinte par le code de
+# Golay binaire parfait.  Seule la majoration est demontree ici.
+# Produit par tools/delsarte_lp.py, re-verifie dans Delsarte/Certificate/Bounds.lean
+n 23
+q 2
+d 7
+y 1 41/66 857/2772 323/2772 95/2772 5/924 0 0 0 0 0 0 0 0 0 0 0 5/1386 79/2772 277/2772 37/132 7/12 1

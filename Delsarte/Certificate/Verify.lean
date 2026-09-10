@@ -110,6 +110,36 @@ theorem A_le_bound_of_dualCheck (hd : 1 ≤ d) (h : dualCheck n 2 d y = true) :
     (A n 2 d : ℚ) ≤ bound n 2 y :=
   A_le_bound_of_dualCert hd (dualCheck_eq_true_iff.mp h)
 
+/-! ## Evaluating without binomial coefficients
+
+`krawtchouk` is defined as a sum of products of binomial coefficients, and
+`Nat.choose` reduces by Pascal's rule. At `n = 13` `norm_num` already gives up and
+leaves `Nat.choose 8 3` standing; at `n = 24` a single `Nat.choose 24 12` is
+millions of kernel additions. Certificates of any interesting size are unprovable
+that way.
+
+`Delsarte.krawtchoukRec` computes the same values from the three-term recurrence,
+with rational arithmetic only. These two lemmas move a concrete check onto it.
+-/
+
+theorem dualSlack_eq_rec (n q : ℕ) (y : ℕ → ℚ) (i : ℕ) (hi : i ≤ n) :
+    dualSlack n q y i = -∑ k ∈ Finset.Icc 1 n, y k * krawtchoukRec n q i k := by
+  rw [dualSlack]
+  congr 1
+  exact Finset.sum_congr rfl fun k _ => by rw [krawtchoukRec_eq n q i hi k]
+
+theorem bound_eq_rec (n q : ℕ) (y : ℕ → ℚ) :
+    bound n q y = 1 + ∑ k ∈ Finset.Icc 1 n, y k * krawtchoukRec n q 0 k := by
+  rw [bound]
+  congr 1
+  exact Finset.sum_congr rfl fun k _ => by rw [krawtchoukRec_eq n q 0 (Nat.zero_le n) k]
+
+/-- A bound in `ℕ`, which is what a table of `A(n,d)` actually records. -/
+theorem A_le_of_dualCert {n d B : ℕ} {y : ℕ → ℚ} (hd : 1 ≤ d)
+    (h : DualCert n 2 d y) (hb : bound n 2 y ≤ (B : ℚ)) : A n 2 d ≤ B := by
+  have h1 : ((A n 2 d : ℕ) : ℚ) ≤ (B : ℚ) := le_trans (A_le_bound_of_dualCert hd h) hb
+  exact_mod_cast h1
+
 /-! ## A certificate, verified
 
 `n = 5`, `q = 2`, `d = 3`, `y = (1, 0, 0, 0, 0)`. The dual slack at distances

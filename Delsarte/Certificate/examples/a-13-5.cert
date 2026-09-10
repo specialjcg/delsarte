@@ -1,0 +1,8 @@
+# Certificat dual de Delsarte
+# Borne : A(13, 2, 5) <= 64.  Valeur vraie : 64 -- le LP est serre.
+# La borne de Hamming ne donne que 2^13 / (1 + 13 + 78) = 89.
+# Produit par tools/delsarte_lp.py, re-verifie dans Delsarte/Certificate/Bounds.lean
+n 13
+q 2
+d 5
+y 3/5 1/5 1/10 0 0 0 0 0 0 0 1/10 1/5 3/5

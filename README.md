@@ -18,7 +18,8 @@ certificats qui en découlent.
 | Réalisabilité primale pour `q > 2` | à faire |
 | Vérificateur de certificat dual, exact sur ℚ | **démontré** — `Delsarte/Certificate/Verify.lean` |
 | Vérificateur de positivité sur intervalle, certificat SOS | **démontré** — `Delsarte/Certificate/Interval.lean` |
-| Borne démontrée : `A(5,2,3) ≤ 6` | **démontré** — `Delsarte/Certificate/Verify.lean` |
+| Bornes démontrées : `A(5,2,3) ≤ 4`, `A(13,2,5) ≤ 64`, `A(23,2,7) ≤ 4096` | **démontré** — `Delsarte/Certificate/Bounds.lean` |
+| Solveur LP exact en rationnels (hors base de confiance) | **livré** — `tools/delsarte_lp.py` |
 | Parseur de fichier certificat + exécutable de rejeu | à faire |
 | Polynômes de Gegenbauer : définition, normalisation, ancrage Chebyshev | **démontré** — `Delsarte/Gegenbauer/Basic.lean` |
 | LP d'Odlyzko–Sloane sur la sphère : borne conditionnelle | **démontré** — `Delsarte/Sphere/LP.lean` |
@@ -31,8 +32,14 @@ certificats qui en découlent.
 
 Sur l'alphabet binaire, la chaîne est complète de bout en bout : un vecteur de
 rationnels entre, une borne sur `A(n,2,d)` sort, et le solveur qui a produit le
-vecteur n'est nulle part dans la preuve. `A(5,2,3) ≤ 6` est démontré — première
-borne numérique du dépôt, `#print axioms` propre, sans `native_decide`.
+vecteur n'est nulle part dans la preuve. Trois bornes sont démontrées —
+`A(5,2,3) ≤ 4`, `A(13,2,5) ≤ 64`, `A(23,2,7) ≤ 4096` — toutes serrées, la
+dernière atteinte par le code de Golay binaire parfait. Seules les majorations
+sont établies : aucun code n'est construit, donc rien ici ne s'écrit `= 4096`.
+
+`A(13,2,5) ≤ 64` est le cas qui justifie la machinerie : la borne de Hamming ne
+donne que 89. C'est une borne que le programme linéaire gagne et que le
+dénombrement élémentaire n'atteint pas.
 
 Du côté sphère, **la dimension 2 est complète et inconditionnelle** : au plus 8
 points unitaires du plan à produits scalaires deux à deux `≤ 1/2`, et au moins 6

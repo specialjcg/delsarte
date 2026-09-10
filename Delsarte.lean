@@ -9,3 +9,4 @@ import Delsarte.Gegenbauer.Basic
 import Delsarte.Sphere.LP
 import Delsarte.Sphere.Dim2
 import Delsarte.Sphere.DegreeTwo
+import Delsarte.Certificate.Bounds

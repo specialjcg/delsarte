@@ -1,0 +1,7 @@
+# Certificat dual de Delsarte
+# Borne : A(5, 2, 3) <= 4.  Valeur vraie : 4 -- le LP est serre.
+# Compare a a-5-3.cert, qui est valide mais donne seulement 6.
+n 5
+q 2
+d 3
+y 1/2 0 0 0 1/2
