@@ -71,8 +71,7 @@ namespace UnitPoints
 theorem sq_add_sq (c : UnitPoints 2 M) (i : Fin M) :
     (c.pts i 0) ^ 2 + (c.pts i 1) ^ 2 = 1 := by
   have h := c.gram_self i
-  rw [gram] at h
-  simp only [PiLp.inner_apply, RCLike.inner_apply, conj_trivial, Fin.sum_univ_two] at h
+  rw [gram_eq_sum, Fin.sum_univ_two] at h
   nlinarith [h]
 
 /-- Angles for every point of a planar configuration. -/
@@ -89,18 +88,12 @@ theorem exists_angles (c : UnitPoints 2 M) :
 pairs. -/
 theorem gram_eq_dot (c : UnitPoints 2 M) (i j : Fin M) :
     c.gram i j = c.pts i 0 * c.pts j 0 + c.pts i 1 * c.pts j 1 := by
-  rw [gram]
-  simp only [PiLp.inner_apply, RCLike.inner_apply, conj_trivial, Fin.sum_univ_two]
-  ring
+  rw [gram_eq_sum, Fin.sum_univ_two]
 
 theorem gram_eq_cos (c : UnitPoints 2 M) {θ : Fin M → ℝ}
     (hθ : ∀ i, c.pts i 0 = Real.cos (θ i) ∧ c.pts i 1 = Real.sin (θ i)) (i j : Fin M) :
     c.gram i j = Real.cos (θ i - θ j) := by
-  rw [gram]
-  simp only [PiLp.inner_apply, RCLike.inner_apply, conj_trivial, Fin.sum_univ_two,
-    (hθ i).1, (hθ i).2, (hθ j).1, (hθ j).2]
-  rw [Real.cos_sub]
-  ring
+  rw [gram_eq_dot, (hθ i).1, (hθ i).2, (hθ j).1, (hθ j).2, Real.cos_sub]
 
 end UnitPoints
 

@@ -23,7 +23,8 @@ certificats qui en découlent.
 | Positivité de Schoenberg `Σ G_k(⟨x_i,x_j⟩) ≥ 0`, degrés 0 et 1, toute dimension | **démontré** — `Delsarte/Sphere/LP.lean` |
 | Positivité de Schoenberg en dimension 2, tout degré | **démontré** — `Delsarte/Sphere/Dim2.lean` |
 | Borne démontrée sur le cercle : au plus 8 points, au moins 6 | **démontré** — `Delsarte/Sphere/Dim2.lean` |
-| Positivité de Schoenberg en dimension quelconque, tout degré | à faire |
+| Positivité de Schoenberg en dimension quelconque, degré 2 | **démontré** — `Delsarte/Sphere/DegreeTwo.lean` |
+| Positivité de Schoenberg en dimension quelconque, degré ≥ 3 | à faire |
 | Kissing number en dimensions 8 et 24 | à faire |
 
 Sur l'alphabet binaire, la chaîne est complète de bout en bout : un vecteur de
@@ -38,8 +39,11 @@ démontrée pour tout degré, par une somme de carrés de réels — la transcri
 au cercle de l'argument binaire, sans harmoniques sphériques.
 
 En dimension quelconque, la borne d'Odlyzko–Sloane est démontrée mais
-**conditionnellement** à cette même positivité, qui n'est établie qu'aux degrés
-0 et 1. C'est le verrou.
+**conditionnellement** à cette même positivité, établie aux degrés 0, 1 et 2 —
+le degré 2 par Cauchy–Schwarz sur la matrice des moments seconds, sans
+harmoniques sphériques, et la borne y est atteinte à la configuration
+orthonormale. Le degré 3 et au-delà reste le verrou ; les certificats
+d'Odlyzko–Sloane en dimensions 8 et 24 sont de degré 9 ou plus.
 
 Ce qui reste : le cas `q > 2`, le parseur de fichier certificat, la positivité
 de Schoenberg en dimension quelconque — le point dur, qui demande la formule

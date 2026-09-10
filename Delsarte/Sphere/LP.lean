@@ -108,6 +108,13 @@ theorem gram_self (c : UnitPoints d M) (i : Fin M) : c.gram i i = 1 := by
   rw [gram, real_inner_self_eq_norm_sq, c.norm_pts i]
   norm_num
 
+/-- The Gram entry as a plain coordinate sum. -/
+theorem gram_eq_sum (c : UnitPoints d M) (i j : Fin M) :
+    c.gram i j = ∑ a, c.pts i a * c.pts j a := by
+  rw [gram]
+  simp only [PiLp.inner_apply, RCLike.inner_apply, conj_trivial]
+  exact Finset.sum_congr rfl fun a _ => by ring
+
 theorem neg_one_le_gram (c : UnitPoints d M) (i j : Fin M) : -1 ≤ c.gram i j := by
   have h := abs_real_inner_le_norm (c.pts i) (c.pts j)
   rw [c.norm_pts i, c.norm_pts j, one_mul] at h
