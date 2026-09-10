@@ -10,6 +10,7 @@ import Delsarte.Gegenbauer.Basic
 import Delsarte.Sphere.LP
 import Delsarte.Sphere.Dim2
 import Delsarte.Sphere.DegreeTwo
+import Delsarte.Sphere.DegreeThree
 import Delsarte.Certificate.Bounds
 import Delsarte.Certificate.Golay
 import Delsarte.Certificate.Parse

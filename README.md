@@ -29,7 +29,8 @@ certificats qui en découlent.
 | Positivité de Schoenberg en dimension 2, tout degré | **démontré** — `Delsarte/Sphere/Dim2.lean` |
 | Borne démontrée sur le cercle : au plus 8 points, au moins 6 | **démontré** — `Delsarte/Sphere/Dim2.lean` |
 | Positivité de Schoenberg en dimension quelconque, degré 2 | **démontré** — `Delsarte/Sphere/DegreeTwo.lean` |
-| Positivité de Schoenberg en dimension quelconque, degré ≥ 3 | à faire |
+| Positivité de Schoenberg en dimension quelconque, degré 3 | **démontré** — `Delsarte/Sphere/DegreeThree.lean` |
+| Positivité de Schoenberg en dimension quelconque, degré ≥ 4 | à faire — décomposition harmonique |
 | Kissing number en dimensions 8 et 24 | à faire |
 
 Sur l'alphabet binaire, la chaîne est complète de bout en bout : un vecteur de
@@ -80,11 +81,23 @@ démontrée pour tout degré, par une somme de carrés de réels — la transcri
 au cercle de l'argument binaire, sans harmoniques sphériques.
 
 En dimension quelconque, la borne d'Odlyzko–Sloane est démontrée mais
-**conditionnellement** à cette même positivité, établie aux degrés 0, 1 et 2 —
-le degré 2 par Cauchy–Schwarz sur la matrice des moments seconds, sans
-harmoniques sphériques, et la borne y est atteinte à la configuration
-orthonormale. Le degré 3 et au-delà reste le verrou ; les certificats
-d'Odlyzko–Sloane en dimensions 8 et 24 sont de degré 9 ou plus.
+**conditionnellement** à cette même positivité, établie aux degrés 0, 1, 2 et 3.
+Le degré 2 sort d'un Cauchy–Schwarz sur la matrice des moments seconds, et la
+borne y est atteinte à la configuration orthonormale. Le degré 3 demande
+strictement plus : le Cauchy–Schwarz naïf donne la constante `d` là où il faut
+`(d+2)/3`, et il faut donc exploiter la symétrie du tenseur des moments
+troisièmes. L'argument est un seul carré développé, celui de la partie
+harmonique du tenseur écrite à la main, et la constante obtenue est exacte —
+une paire antipodale annule la somme.
+
+Le degré 4 change de nature, et c'est là que le volet sphère s'arrête. La cible
+de la contraction cesse d'être irréductible : `C C*` y a deux valeurs propres au
+lieu d'une, l'inégalité passe à trois termes, et il faut le spectre, donc la
+décomposition harmonique des tenseurs symétriques. Mathlib ne l'a pas, et
+l'estimation honnête est de l'ordre de 1500 à 3000 lignes. Les certificats
+d'Odlyzko–Sloane en dimensions 8 et 24 étant de degré 9 ou plus, il n'y a pas
+non plus de raccourci par « seulement les degrés utiles » : `dim H_9 = 8008` en
+dimension 8.
 
 La condition `f(t) ≤ 0` sur un intervalle, qui n'est pas une somme finie, a son
 propre vérificateur : un certificat de sommes de carrés dans le module
@@ -93,11 +106,10 @@ existence (Markov–Lukács) n'a jamais à l'être, puisque la décomposition es
 fournie et non dérivée. La borne du cercle passe par ce vérificateur, pas à
 côté.
 
-Ce qui reste : le cas `q > 2`, le parseur de fichier certificat, et la positivité
-de Schoenberg en degré ≥ 3 — le point dur, qui demande la formule d'addition des
-harmoniques sphériques. C'est désormais le verrou unique. Aucune borne en
-dimension 8 ou 24 n'est établie ici, et le kissing number reste entièrement
-devant.
+Ce qui reste : le cas `q > 2`, et la positivité de Schoenberg en degré ≥ 4 —
+le point dur, qui demande la décomposition harmonique des tenseurs symétriques.
+C'est le verrou unique. Aucune borne en dimension 8 ou 24 n'est établie ici, et
+le kissing number reste entièrement devant.
 
 ## Pourquoi la dualité faible suffit
 

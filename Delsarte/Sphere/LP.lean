@@ -130,9 +130,12 @@ end UnitPoints
 
 /-! ## Schoenberg positive-definiteness
 
-The continuous analogue of `Delsarte.Hamming.sum_sum_krawtchouk_nonneg`. Stated,
-not proved: in general it follows from the addition formula for spherical
-harmonics, which is not formalized here.
+The continuous analogue of `Delsarte.Hamming.sum_sum_krawtchouk_nonneg`. Degrees
+0 and 1 are settled here, degree 2 in `Delsarte/Sphere/DegreeTwo.lean`, degree 3
+in `Delsarte/Sphere/DegreeThree.lean`, and every degree in dimension 2 in
+`Delsarte/Sphere/Dim2.lean`. Degree 4 and above is open in general dimension: it
+needs the harmonic decomposition of symmetric tensors, which mathlib does not
+have.
 -/
 
 /-- `G_k` is positive definite on the sphere of `ℝ^d`. -/
