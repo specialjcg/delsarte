@@ -18,7 +18,8 @@ certificats qui en découlent.
 | Vérificateur de certificat dual, exact sur ℚ | **démontré** — `Delsarte/Certificate/Verify.lean` |
 | Borne démontrée : `A(5,2,3) ≤ 6` | **démontré** — `Delsarte/Certificate/Verify.lean` |
 | Parseur de fichier certificat + exécutable de rejeu | à faire |
-| Polynômes de Gegenbauer, LP sur la sphère | à faire |
+| Polynômes de Gegenbauer : définition, normalisation, ancrage Chebyshev | **démontré** — `Delsarte/Gegenbauer/Basic.lean` |
+| Positivité `Σ f(⟨x_i,x_j⟩) ≥ 0` sur la sphère, LP d'Odlyzko–Sloane | à faire |
 | Kissing number en dimensions 8 et 24 | à faire |
 
 Sur l'alphabet binaire, la chaîne est complète de bout en bout : un vecteur de
@@ -26,9 +27,15 @@ rationnels entre, une borne sur `A(n,2,d)` sort, et le solveur qui a produit le
 vecteur n'est nulle part dans la preuve. `A(5,2,3) ≤ 6` est démontré — première
 borne numérique du dépôt, `#print axioms` propre, sans `native_decide`.
 
-Ce qui reste : le cas `q > 2`, le parseur de fichier certificat, et tout le
-volet sphère — donc le kissing number, qui est l'objectif affiché. Aucune borne
-en dimension 8 ou 24 n'est établie ici.
+Du côté sphère, seule la base polynomiale existe : les Gegenbauer normalisés
+par `G_k(1) = 1`, évaluables exactement sur ℚ, dont la définition est ancrée à
+la famille de Chebyshev déjà formalisée dans mathlib. C'est l'analogue de
+`Krawtchouk/Basic.lean`, pas davantage.
+
+Ce qui reste : le cas `q > 2`, le parseur de fichier certificat, et le cœur du
+volet sphère — la positivité `Σ f(⟨x_i,x_j⟩) ≥ 0` et la certification de
+`f(t) ≤ 0` sur un intervalle, qui portent la borne d'Odlyzko–Sloane. Aucune
+borne en dimension 8 ou 24 n'est établie ici.
 
 ## Pourquoi la dualité faible suffit
 
