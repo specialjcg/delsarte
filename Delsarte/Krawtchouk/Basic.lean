@@ -9,6 +9,8 @@ import Mathlib.Algebra.Polynomial.Roots
 import Mathlib.Algebra.CharZero.Infinite
 import Mathlib.Algebra.BigOperators.NatAntidiagonal
 import Mathlib.Algebra.BigOperators.Intervals
+import Mathlib.Algebra.Polynomial.Derivative
+import Mathlib.Tactic.LinearCombination
 
 /-!
 # Krawtchouk polynomials
@@ -193,5 +195,128 @@ theorem sum_krawtchouk_mul_krawtchouk (n q k l : ℕ) (hl : l ≤ n) :
     · simp [hkl]
     · simp [hkl, Ne.symm hkl]
   exact hgoal
+
+/-! ## The three-term recurrence
+
+Evaluating `krawtchouk` from its definition costs two binomial coefficients per
+term, and `Nat.choose` reduces by Pascal's rule, so `Nat.choose 24 12` is millions
+of additions in the kernel. The recurrence removes the binomials entirely: from
+`K_0 = 1` and `K_1` it produces every value with rational arithmetic only. That is
+what makes a certificate at `n = 24` checkable at all.
+
+The proof is the differential equation of the generating polynomial. To keep
+natural subtraction out of it, the two exponents are taken as free variables and
+specialized to `n - i` and `i` only at the very end.
+-/
+
+/-- The generating polynomial with both exponents free. `krawtchoukPoly n q i` is
+the case `a = n - i`, `b = i`; keeping `a` and `b` independent is what keeps `ℕ`
+subtraction out of the recurrence proof. -/
+noncomputable def genPoly (c : ℚ) (a b : ℕ) : ℚ[X] :=
+  (C c * X + 1) ^ a * (C (-1 : ℚ) * X + 1) ^ b
+
+theorem krawtchoukPoly_eq_genPoly (n q i : ℕ) :
+    krawtchoukPoly n q i = genPoly ((q : ℚ) - 1) (n - i) i := rfl
+
+/-- The differential equation of the generating polynomial, already multiplied out
+by `(cX + 1)(1 - X)` so that no division and no subtraction of exponents survives.
+-/
+theorem genPoly_ode (c : ℚ) (a b : ℕ) :
+    derivative (genPoly c a b) + C (c - 1) * (derivative (genPoly c a b) * X)
+        - C c * (derivative (genPoly c a b) * X * X)
+      = C (c * a - b) * genPoly c a b - C (c * (a + b)) * (X * genPoly c a b) := by
+  simp only [genPoly]
+  cases a <;> cases b <;>
+    simp only [derivative_mul, derivative_pow, derivative_one, derivative_X,
+      derivative_C, Nat.add_sub_cancel, pow_zero, map_add, map_one, map_mul, map_neg, map_sub,
+      map_zero, Polynomial.C_eq_natCast, Nat.cast_zero, Nat.cast_add, Nat.cast_one,
+      mul_one, zero_mul, mul_zero, add_zero, zero_add] <;>
+    ring
+
+/-- `X` times a derivative reads off the coefficient with its own index as factor.
+Stated for every `k` including `0`, which is what lets the recurrence avoid a case
+split. -/
+theorem coeff_derivative_mul_X (p : ℚ[X]) (k : ℕ) :
+    (derivative p * X).coeff k = (k : ℚ) * p.coeff k := by
+  cases k with
+  | zero => simp
+  | succ k =>
+    rw [coeff_mul_X, coeff_derivative]
+    push_cast
+    ring
+
+/-- **The three-term recurrence.** For `i ≤ n`,
+
+`(k + 2) K_(k+2)(i) = [(q-1)(n-i) - i - (q-2)(k+1)] K_(k+1)(i) - (q-1)(n-k) K_k(i)`
+
+With `K_0 = 1` and `krawtchouk_one` this evaluates the whole family without a
+single binomial coefficient. -/
+theorem krawtchouk_recurrence (n q i k : ℕ) (hi : i ≤ n) :
+    ((k : ℚ) + 2) * krawtchouk n q (k + 2) i
+      = (((q : ℚ) - 1) * ((n : ℚ) - i) - i - ((q : ℚ) - 2) * ((k : ℚ) + 1))
+          * krawtchouk n q (k + 1) i
+        - ((q : ℚ) - 1) * ((n : ℚ) - k) * krawtchouk n q k i := by
+  have hni : (((n - i : ℕ) : ℚ)) = (n : ℚ) - i := by
+    rw [Nat.cast_sub hi]
+  have hode := congrArg (fun p : ℚ[X] => p.coeff (k + 1))
+    (genPoly_ode ((q : ℚ) - 1) (n - i) i)
+  simp only [coeff_add, coeff_sub, coeff_C_mul, coeff_derivative, coeff_mul_X,
+    coeff_derivative_mul_X, coeff_X_mul, ← krawtchoukPoly_eq_genPoly,
+    coeff_krawtchoukPoly] at hode
+  rw [hni, show k + 1 + 1 = k + 2 from rfl] at hode
+  push_cast at hode ⊢
+  linear_combination hode
+
+/-! ## A binomial-free evaluator
+
+The recurrence turned into a definition. `krawtchoukRec` computes the same values
+with rational arithmetic only, which is what a certificate at `n = 24` needs:
+`Nat.choose 24 12` alone is millions of kernel additions.
+-/
+
+/-- Krawtchouk values computed by the three-term recurrence, without a single
+binomial coefficient. Equal to `krawtchouk` whenever `i ≤ n`, by
+`krawtchoukRec_eq`. -/
+def krawtchoukRec (n q i : ℕ) : ℕ → ℚ
+  | 0 => 1
+  | 1 => ((q : ℚ) - 1) * ((n : ℚ) - i) - i
+  | (k + 2) =>
+      ((((q : ℚ) - 1) * ((n : ℚ) - i) - i - ((q : ℚ) - 2) * ((k : ℚ) + 1))
+          * krawtchoukRec n q i (k + 1)
+        - ((q : ℚ) - 1) * ((n : ℚ) - k) * krawtchoukRec n q i k) / ((k : ℚ) + 2)
+
+/-- The two definitions agree. One counts subsets, the other only adds and
+divides rationals. -/
+theorem krawtchoukRec_eq (n q i : ℕ) (hi : i ≤ n) (k : ℕ) :
+    krawtchoukRec n q i k = krawtchouk n q k i := by
+  induction k using Nat.twoStepInduction with
+  | zero => simp [krawtchoukRec, krawtchouk_zero_left]
+  | one => simp [krawtchoukRec, krawtchouk_one, Nat.cast_sub hi]
+  | more k ih1 ih2 =>
+    have hk : ((k : ℚ) + 2) ≠ 0 := by positivity
+    rw [krawtchoukRec, ih1, ih2, div_eq_iff hk]
+    linear_combination -krawtchouk_recurrence n q i k hi
+
+/-! ### The hypothesis `i ≤ n` is load-bearing
+
+Outside that range the explicit sum and the recurrence are two different
+functions, because `krawtchouk` reads `n - i` as a natural number and truncates
+it to zero while `krawtchoukRec` subtracts in `ℚ`. The values below differ, so
+`krawtchoukRec_eq` cannot be stated without its hypothesis.
+-/
+
+theorem krawtchoukRec_ne_krawtchouk_of_lt : krawtchoukRec 5 2 7 1 ≠ krawtchouk 5 2 1 7 := by
+  norm_num [krawtchoukRec, krawtchouk, Finset.sum_range_succ]
+
+-- The `#`-command linter is off here on purpose: this is a replay, and it is the point.
+set_option linter.hashCommand false
+
+-- Smoke test over a full `q`-ary table: the counting definition and the
+-- recurrence agree on every entry.
+#guard (List.range 8).all fun k =>
+  (List.range 8).all fun i => krawtchoukRec 7 3 i k == krawtchouk 7 3 k i
+
+#guard krawtchoukRec 24 2 12 12 == 924
+#guard ! (krawtchoukRec 5 2 7 1 == krawtchouk 5 2 1 7)
 
 end Delsarte
