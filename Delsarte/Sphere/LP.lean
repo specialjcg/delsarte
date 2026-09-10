@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Jean-Charles Gouleau
 -/
 import Delsarte.Gegenbauer.Basic
+import Delsarte.Certificate.Interval
 import Mathlib.Analysis.InnerProductSpace.PiL2
 
 /-!
@@ -44,15 +45,15 @@ computation. The method chosen for discharging it on concrete certificates is a
 
 `-f = σ₀ + (t + 1) (1/2 - t) σ₁`, each `σ` a sum of squares.
 
-Soundness is immediate — on `[-1, 1/2]` the factor `(t + 1) (1/2 - t)` is
-nonnegative and so is every square — and soundness is all that is needed. The
-existence direction (Markov-Lukács) is a theorem about which certificates exist;
-it never has to be formalized, because the certificate is supplied, not derived.
-Finding `σ₀, σ₁` is the solver's job and stays outside the trust base, exactly as
-for the dual vector `y` of the Hamming side.
+and that is what `Delsarte.Certificate.IntervalCert` implements. Soundness is
+immediate — on `[-1, 1/2]` the factors are nonnegative and so is every square —
+and soundness is all that is needed. The existence direction (Markov-Lukács) never
+has to be formalized, because the decomposition is supplied, not derived.
 
-The witness below is small enough that it needs no such machinery: its `-f`
-factors as `2 (t + 1) ^ 2 (1 - 2 t)`, and `nlinarith` closes it.
+The witness below goes through that machinery rather than around it:
+`certCircleSOS` writes `-f` as `(1/2 - X) * (2 (X + 1)) ^ 2`, one square and one
+multiplier, and `lpReal_certCircle_nonpos` reads off the interval hypothesis from
+it.
 -/
 
 namespace Delsarte.Sphere
@@ -286,9 +287,37 @@ theorem lpReal_certCircle (t : ℝ) : lpReal 2 3 certCircle t = 4 * t ^ 3 + 6 * 
   rw [lpReal, lpPoly_certCircle]
   simp [map_ofNat]
 
-theorem lpReal_certCircle_nonpos (t : ℝ) (ht : t ≤ 1 / 2) : lpReal 2 3 certCircle t ≤ 0 := by
-  rw [lpReal_certCircle]
-  nlinarith [sq_nonneg (t + 1)]
+/-- The interval certificate for the witness: `-f = (1/2 - X) * (2 (X + 1)) ^ 2`.
+One square, one multiplier, and no `nlinarith`. -/
+noncomputable def certCircleSOS :
+    Certificate.IntervalCert (-1) (1 / 2) (lpPoly 2 3 certCircle) where
+  sqB := [2 * (X + 1)]
+  identity := by
+    rw [lpPoly_certCircle]
+    apply Polynomial.funext
+    intro x
+    simp [Certificate.sosPoly]
+    ring
+
+theorem lpReal_certCircle_nonpos {t : ℝ} (h1 : -1 ≤ t) (h2 : t ≤ 1 / 2) :
+    lpReal 2 3 certCircle t ≤ 0 :=
+  Certificate.aeval_nonpos_of_intervalCert certCircleSOS
+    (by push_cast; linarith) (by push_cast; linarith)
+
+/-- Outside the interval the certificate says nothing, and must not: `f 1 = 8 > 0`
+is precisely what makes the bound `f 1 / f 0` finite and useful. -/
+theorem lpReal_certCircle_one_pos : 0 < lpReal 2 3 certCircle 1 := by
+  rw [lpReal_certCircle]; norm_num
+
+/-- The multiplier is load-bearing. `-f` takes a negative value at `2`, so it is
+not a bare sum of squares: any certificate for `f` must use `1/2 - X`, and is
+therefore tied to the interval it was written for. -/
+theorem neg_lpPoly_certCircle_not_sos (ps : List ℚ[X]) :
+    -(lpPoly 2 3 certCircle) ≠ Certificate.sosPoly ps := by
+  refine Certificate.not_sosPoly_of_aeval_neg (t := 2) ?_ ps
+  rw [lpPoly_certCircle]
+  simp [map_ofNat]
+  norm_num
 
 theorem sum_certCircle : ∑ k ∈ range 4, certCircle k = 8 := by
   simp [Finset.sum_range_succ, certCircle]
@@ -310,7 +339,7 @@ theorem card_le_eight_of_schoenberg (h2 : SchoenbergPos 2 2) (h3 : SchoenbergPos
       · exact h3)
     (fun k hk => by rw [mem_range] at hk; interval_cases k <;> norm_num [certCircle])
     (by norm_num [certCircle])
-    (fun t _ ht => lpReal_certCircle_nonpos t ht) c hc
+    (fun _ h1 h2 => lpReal_certCircle_nonpos h1 h2) c hc
   rwa [sum_certCircle, show certCircle 0 = 1 from rfl, div_one] at h
 
 /-! ## Negative control

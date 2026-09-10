@@ -16,6 +16,7 @@ certificats qui en découlent.
 | Borne de Delsarte sur `A(n,2,d)`, sans hypothèse | **démontré** — `Delsarte/Hamming/Feasible.lean` |
 | Réalisabilité primale pour `q > 2` | à faire |
 | Vérificateur de certificat dual, exact sur ℚ | **démontré** — `Delsarte/Certificate/Verify.lean` |
+| Vérificateur de positivité sur intervalle, certificat SOS | **démontré** — `Delsarte/Certificate/Interval.lean` |
 | Borne démontrée : `A(5,2,3) ≤ 6` | **démontré** — `Delsarte/Certificate/Verify.lean` |
 | Parseur de fichier certificat + exécutable de rejeu | à faire |
 | Polynômes de Gegenbauer : définition, normalisation, ancrage Chebyshev | **démontré** — `Delsarte/Gegenbauer/Basic.lean` |
@@ -45,11 +46,18 @@ harmoniques sphériques, et la borne y est atteinte à la configuration
 orthonormale. Le degré 3 et au-delà reste le verrou ; les certificats
 d'Odlyzko–Sloane en dimensions 8 et 24 sont de degré 9 ou plus.
 
-Ce qui reste : le cas `q > 2`, le parseur de fichier certificat, la positivité
-de Schoenberg en dimension quelconque — le point dur, qui demande la formule
-d'addition des harmoniques sphériques — et le vérificateur de positivité sur
-intervalle. Aucune borne en dimension 8 ou 24 n'est établie ici, et le kissing
-number reste entièrement devant.
+La condition `f(t) ≤ 0` sur un intervalle, qui n'est pas une somme finie, a son
+propre vérificateur : un certificat de sommes de carrés dans le module
+quadratique de l'intervalle. Seule la correction est démontrée — le sens
+existence (Markov–Lukács) n'a jamais à l'être, puisque la décomposition est
+fournie et non dérivée. La borne du cercle passe par ce vérificateur, pas à
+côté.
+
+Ce qui reste : le cas `q > 2`, le parseur de fichier certificat, et la positivité
+de Schoenberg en degré ≥ 3 — le point dur, qui demande la formule d'addition des
+harmoniques sphériques. C'est désormais le verrou unique. Aucune borne en
+dimension 8 ou 24 n'est établie ici, et le kissing number reste entièrement
+devant.
 
 ## Pourquoi la dualité faible suffit
 
