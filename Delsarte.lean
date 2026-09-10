@@ -3,9 +3,11 @@ import Delsarte.Code.Basic
 import Delsarte.Krawtchouk.Basic
 import Delsarte.Krawtchouk.Subsets
 import Delsarte.Hamming.LP
+import Delsarte.Hamming.DistDist
 import Delsarte.Hamming.Feasible
 import Delsarte.Hamming.CharQ
 import Delsarte.Hamming.Shell
+import Delsarte.Hamming.FeasibleQ
 import Delsarte.Certificate.Verify
 import Delsarte.Certificate.Integer
 import Delsarte.Certificate.Interval

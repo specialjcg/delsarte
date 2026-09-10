@@ -5,6 +5,7 @@ Authors: Jean-Charles Gouleau
 -/
 import Delsarte.Hamming.LP
 import Delsarte.Krawtchouk.Subsets
+import Delsarte.Hamming.DistDist
 import Mathlib.Algebra.BigOperators.Ring.Finset
 import Mathlib.Data.Finset.Powerset
 
@@ -43,8 +44,11 @@ words.
 
 ## Scope
 
-Binary only. For `q > 2` the characters are `q`-th roots of unity and the
-argument needs `ℂ` or a cyclotomic ring; that is tracked separately.
+Binary only, and kept that way on purpose. `Delsarte/Hamming/FeasibleQ.lean`
+proves the same statement for every `q`, but the characters there are `q`-th roots
+of unity and the argument goes through `ℂ`. This file's project-import closure
+contains no complex analysis, so the binary bounds — Golay included — still rest
+on a chain that never leaves `ℚ`.
 -/
 
 namespace Delsarte.Hamming
@@ -123,26 +127,6 @@ theorem sum_sum_krawtchouk_nonneg (C : Code n 2) (k : ℕ) :
   rw [← key]
   exact Finset.sum_nonneg fun u _ => sq_nonneg _
 
-/-- The distance distribution reassembles the double sum, divided by `|C|`. -/
-theorem sum_distDist_mul_krawtchouk (C : Code n 2) (k : ℕ) :
-    ∑ i ∈ Finset.range (n + 1), distDist C i * krawtchouk n 2 k i
-      = (∑ x ∈ C, ∑ y ∈ C, krawtchouk n 2 k (hammingDist x y)) / C.card := by
-  have hmem : ∀ p ∈ C ×ˢ C, hammingDist p.1 p.2 ∈ Finset.range (n + 1) := by
-    intro p _
-    simp only [Finset.mem_range, Nat.lt_succ_iff]
-    simpa using hammingDist_le_card_fintype (x := p.1) (y := p.2)
-  have hprod : ∑ x ∈ C, ∑ y ∈ C, krawtchouk n 2 k (hammingDist x y)
-      = ∑ p ∈ C ×ˢ C, krawtchouk n 2 k (hammingDist p.1 p.2) := by
-    rw [Finset.sum_product]
-  rw [hprod, ← Finset.sum_fiberwise_of_maps_to hmem, Finset.sum_div]
-  refine Finset.sum_congr rfl fun i _ => ?_
-  have hconst : ∑ p ∈ (C ×ˢ C).filter (fun p => hammingDist p.1 p.2 = i),
-      krawtchouk n 2 k (hammingDist p.1 p.2)
-      = ∑ _p ∈ (C ×ˢ C).filter (fun p => hammingDist p.1 p.2 = i), krawtchouk n 2 k i :=
-    Finset.sum_congr rfl fun p hp => by rw [(Finset.mem_filter.mp hp).2]
-  rw [hconst, Finset.sum_const, nsmul_eq_mul, distDist]
-  ring
-
 /-- **Delsarte positivity.** Every Krawtchouk degree gives a valid constraint on
 the distance distribution of a binary code. -/
 theorem sum_distDist_mul_krawtchouk_nonneg (C : Code n 2) (k : ℕ) :
@@ -150,34 +134,13 @@ theorem sum_distDist_mul_krawtchouk_nonneg (C : Code n 2) (k : ℕ) :
   rw [sum_distDist_mul_krawtchouk C k]
   exact div_nonneg (sum_sum_krawtchouk_nonneg C k) (by positivity)
 
-/-- Delsarte positivity in the shape `primalFeasible_codeVec` expects: the term
-`i = 0` contributes `K_k(0)`, and the terms `0 < i < d` vanish. -/
+/-- Delsarte positivity in the shape `primalFeasible_codeVec` expects. The
+bookkeeping is `q`-generic and lives in `Delsarte/Hamming/DistDist.lean`; only
+the positivity input is binary. -/
 theorem delsarte_positivity (hd : 1 ≤ d) {C : Code n 2} (hC : C.Nonempty)
     (hmin : MinDistAtLeast d C) (k : ℕ) :
-    0 ≤ krawtchouk n 2 k 0 + ∑ i ∈ Finset.Icc d n, distDist C i * krawtchouk n 2 k i := by
-  have hnn := sum_distDist_mul_krawtchouk_nonneg C k
-  have hsub : insert 0 (Finset.Icc d n) ⊆ Finset.range (n + 1) := by
-    intro i hi
-    simp only [Finset.mem_insert, Finset.mem_Icc] at hi
-    simp only [Finset.mem_range, Nat.lt_succ_iff]
-    rcases hi with rfl | ⟨_, h2⟩
-    · exact Nat.zero_le _
-    · exact h2
-  have hzero : ∀ i ∈ Finset.range (n + 1), i ∉ insert 0 (Finset.Icc d n) →
-      distDist C i * krawtchouk n 2 k i = 0 := by
-    intro i hi hni
-    simp only [Finset.mem_range, Nat.lt_succ_iff] at hi
-    simp only [Finset.mem_insert, Finset.mem_Icc, not_or, not_and_or, not_le] at hni
-    obtain ⟨hi0, hid⟩ := hni
-    rw [distDist_eq_zero_of_lt hmin (Nat.pos_of_ne_zero hi0)
-      (by rcases hid with h | h <;> omega), zero_mul]
-  have hsplit : ∑ i ∈ Finset.range (n + 1), distDist C i * krawtchouk n 2 k i
-      = distDist C 0 * krawtchouk n 2 k 0
-        + ∑ i ∈ Finset.Icc d n, distDist C i * krawtchouk n 2 k i := by
-    rw [← Finset.sum_subset hsub hzero,
-      Finset.sum_insert (by simp [Finset.mem_Icc]; omega)]
-  rw [hsplit, distDist_zero hC, one_mul] at hnn
-  exact hnn
+    0 ≤ krawtchouk n 2 k 0 + ∑ i ∈ Finset.Icc d n, distDist C i * krawtchouk n 2 k i :=
+  delsarte_positivity_of_nonneg hd hC hmin k (sum_distDist_mul_krawtchouk_nonneg C k)
 
 /-- The distance distribution of a binary code is a feasible point of the
 Delsarte primal. This is the hypothesis `Delsarte/Hamming/LP.lean` assumes

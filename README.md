@@ -15,7 +15,8 @@ certificats qui en découlent.
 | LP de Delsarte (schéma de Hamming) : assemblage + borne conditionnelle | **démontré** — `Delsarte/Hamming/LP.lean` |
 | Réalisabilité primale d'une distribution de distances, **q = 2** | **démontré** — `Delsarte/Hamming/Feasible.lean` |
 | Borne de Delsarte sur `A(n,2,d)`, sans hypothèse | **démontré** — `Delsarte/Hamming/Feasible.lean` |
-| Réalisabilité primale pour `q > 2` | à faire |
+| Réalisabilité primale pour `q > 2` (caractères complexes) | **démontré** — `Delsarte/Hamming/FeasibleQ.lean` |
+| Borne de Delsarte sur `A(n,q,d)` pour tout `q ≥ 1`, sans hypothèse | **démontré** — `Delsarte/Hamming/FeasibleQ.lean` |
 | Vérificateur de certificat dual, exact sur ℚ | **démontré** — `Delsarte/Certificate/Verify.lean` |
 | Vérificateur de positivité sur intervalle, certificat SOS | **démontré** — `Delsarte/Certificate/Interval.lean` |
 | Bornes démontrées : `A(5,2,3) ≤ 4`, `A(13,2,5) ≤ 64`, `A(23,2,7) ≤ 4096` | **démontré** — `Delsarte/Certificate/Bounds.lean` |
@@ -106,10 +107,21 @@ existence (Markov–Lukács) n'a jamais à l'être, puisque la décomposition es
 fournie et non dérivée. La borne du cercle passe par ce vérificateur, pas à
 côté.
 
-Ce qui reste : le cas `q > 2`, et la positivité de Schoenberg en degré ≥ 4 —
-le point dur, qui demande la décomposition harmonique des tenseurs symétriques.
-C'est le verrou unique. Aucune borne en dimension 8 ou 24 n'est établie ici, et
-le kissing number reste entièrement devant.
+Le cas `q > 2` est démontré. Les caractères de `ℤ/q` sont des racines `q`-ièmes
+de l'unité, donc l'argument quitte ℚ : la somme double sur les paires de mots est
+`∑_u ‖∑_x χ_u(x)‖²`, un module au carré par vecteur d'indices de poids `k`. La
+redescente vers ℚ est explicite — injectivité de `Complex.ofReal`, positivité de
+`Complex.normSq`, `Rat.cast` qui reflète l'ordre — et le chaînage binaire reste
+séparé, entièrement dans ℚ, sans dépendance d'import vers ℂ. Ce qui n'est **pas**
+encore là côté q-aire : les certificats. `Delsarte/Certificate/Integer.lean`
+construit la table de Krawtchouk entière par une récurrence binaire, donc aucune
+borne ternaire n'est encore établie même si le théorème de solidité les couvre
+désormais.
+
+Ce qui reste : la positivité de Schoenberg en degré ≥ 4 — le point dur, qui
+demande la décomposition harmonique des tenseurs symétriques. C'est le verrou
+unique. Aucune borne en dimension 8 ou 24 n'est établie ici, et le kissing number
+reste entièrement devant.
 
 ## Pourquoi la dualité faible suffit
 

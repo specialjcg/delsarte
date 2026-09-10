@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Jean-Charles Gouleau
 -/
 import Delsarte.Hamming.Feasible
+import Delsarte.Hamming.FeasibleQ
 
 /-!
 # Exact certificate verification over `ℚ`
@@ -11,11 +12,13 @@ import Delsarte.Hamming.Feasible
 A Delsarte certificate is a vector of rationals `y k`, one per Krawtchouk degree
 `1 ≤ k ≤ n`. `DualCert` is the property of being dual feasible, decidable and
 therefore checkable; `A_le_bound_of_dualCert` turns it into a bound on
-`A n 2 d`.
+`A n 2 d`, and `A_le_bound_of_dualCert_qary` into a bound on `A n q d` for every
+`q ≥ 1`.
 
 Nothing here is mathematically interesting, and that is the point: the verifier
 is plumbing between a vector of rationals and
-`Delsarte.Hamming.A_le_of_dualFeasible_binary`. The solver that produced `y` is
+`Delsarte.Hamming.A_le_of_dualFeasible_binary` — or, for a general alphabet,
+`Delsarte.Hamming.A_le_of_dualFeasible_qary`. The solver that produced `y` is
 not imported, not trusted, and not named.
 
 ## What is checked
@@ -115,6 +118,24 @@ theorem A_le_bound_of_dualCert (hd : 1 ≤ d) (h : DualCert n 2 d y) :
 theorem A_le_bound_of_dualCheck (hd : 1 ≤ d) (h : dualCheck n 2 d y = true) :
     (A n 2 d : ℚ) ≤ bound n 2 y :=
   A_le_bound_of_dualCert hd (dualCheck_eq_true_iff.mp h)
+
+/-- **The verifier, for every alphabet size.** Same proof as the binary case; the
+only change is that primal feasibility now comes from
+`Delsarte.Hamming.A_le_of_dualFeasible_qary`. -/
+theorem A_le_bound_of_dualCert_qary (hq : 1 ≤ q) (hd : 1 ≤ d) (h : DualCert n q d y) :
+    (A n q d : ℚ) ≤ bound n q y := by
+  have hdot : delsarteRHS n q ⬝ᵥ (fun k : ConIdx n => y k.1)
+      = ∑ k ∈ Finset.Icc 1 n, y k * krawtchouk n q k 0 := by
+    rw [← Finset.sum_coe_sort (Finset.Icc 1 n) (fun k => y k * krawtchouk n q k 0)]
+    exact Finset.sum_congr rfl fun k _ => by simp [delsarteRHS, mul_comm]
+  rw [bound, ← hdot]
+  exact A_le_of_dualFeasible_qary hq hd (dualFeasible_of_dualCert h)
+
+/-- Same statement for every alphabet size, consuming the checker's `Bool`. -/
+theorem A_le_bound_of_dualCheck_qary (hq : 1 ≤ q) (hd : 1 ≤ d)
+    (h : dualCheck n q d y = true) :
+    (A n q d : ℚ) ≤ bound n q y :=
+  A_le_bound_of_dualCert_qary hq hd (dualCheck_eq_true_iff.mp h)
 
 /-! ## Evaluating without binomial coefficients
 

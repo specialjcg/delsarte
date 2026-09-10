@@ -16,6 +16,9 @@ can run without reading any Lean.
 Because a parser decides *which* statement is at stake, the report always shows
 `n`, `q` and `d` next to the bound. A claim without its parameters is not a claim.
 
+The claim below holds for every alphabet size: soundness rests on
+`Delsarte.Certificate.A_le_bound_of_dualCheck_qary`, which needs only `q ≥ 1`.
+
 `--self-check` compares each shipped `.cert` against the certificate defined in
 Lean. Without it the two could drift apart silently, which is the one failure a
 repository of certificates must not have.
@@ -71,8 +74,8 @@ def replay (path : String) : IO Bool := do
       if !ok then
         IO.println "  claim         : none, the certificate was rejected"
         return false
-      if c.q != 2 then
-        IO.println "  claim         : none, the soundness theorem covers q = 2 only"
+      if c.q == 0 then
+        IO.println "  claim         : none, the soundness theorem needs q ≥ 1"
         return true
       IO.println s!"  claim         : A({c.n}, {c.q}, {c.d}) <= {floorRat c.claimedBound}"
       return true
