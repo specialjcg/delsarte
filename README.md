@@ -97,7 +97,23 @@ lake build
 ```
 
 Lean `v4.33.1`, mathlib épinglée sur la même révision. L'épinglage est
-délibéré : pas de bot de mise à jour.
+délibéré : pas de bot de mise à jour. Une montée de version silencieuse de
+mathlib changerait ce que les preuves signifient sans que personne ne lise le
+diff.
+
+## Ce que la CI garantit
+
+- Le build échoue si un fichier ne compile pas.
+- **`axiom-audit`** : échec si une déclaration sous `Delsarte` dépend
+  transitivement d'un axiome hors de `propext, Classical.choice, Quot.sound`.
+  Ça attrape `sorry` (`sorryAx`), `native_decide` (`Lean.ofReduceBool`) et tout
+  axiome maison, y compris arrivés par un import. Un `sorry` qui compile en
+  silence est le pire mode de panne de ce projet.
+- Les `#guard` de rejeu tournent au build : le vérificateur est réexécuté sur
+  chaque certificat, valide ou non, et un désaccord avec les théorèmes casse la
+  CI.
+- Les contrôles négatifs sont des théorèmes. Ils échouent au build, pas dans un
+  rapport que personne ne lit.
 
 ## Licence
 

@@ -160,6 +160,28 @@ theorem not_dualCert_halved :
   have h2 := h.2 3 (by decide)
   norm_num [dualSlack, krawtchouk, Finset.sum_Icc_succ_top, Finset.sum_range_succ] at h2
 
+/-- The certificate is **tight** at distance 3: the slack is exactly 1, and the
+check accepts it. Read together with `not_dualCert_epsilon`, this pins the
+comparison to `≤` and not `<`. -/
+theorem dualSlack_certFiveThree_three : dualSlack 5 2 certFiveThree 3 = 1 := by cert_num
+
+/-- Rejected: the valid certificate perturbed downwards by `10 ^ (-30)`, far below
+the resolution of any floating-point number. Its slack at distance 3 is
+`1 - 10 ^ (-30) < 1`. Anything that had rounded to a `Float` anywhere along the
+chain would accept this certificate. -/
+theorem not_dualCert_epsilon :
+    ¬ DualCert 5 2 3 (fun k => if k = 1 then 1 - 1 / 10 ^ 30 else 0) := by
+  intro h
+  have h2 := h.2 3 (by decide)
+  norm_num [dualSlack, krawtchouk, Finset.sum_Icc_succ_top, Finset.sum_range_succ] at h2
+
+/-- Rejected: the zero certificate. It would bound `A(5,2,3)` by `1`, and the true
+value is 4. A bound known to be false must not be certifiable. -/
+theorem not_dualCert_zero : ¬ DualCert 5 2 3 (fun _ => 0) := by
+  intro h
+  have h2 := h.2 3 (by decide)
+  norm_num [dualSlack] at h2
+
 /-- Rejected: the same certificate read at the wrong minimum distance. Valid for
 `d = 3`, it fails at `d = 2`, where distance 2 has slack `-1`. A certificate is
 tied to its parameters. -/
@@ -183,5 +205,7 @@ set_option linter.hashCommand false
 #guard ! dualCheck 5 2 3 (fun k => if k = 1 then -1 else 0)
 #guard ! dualCheck 5 2 3 (fun k => if k = 1 then 1 / 2 else 0)
 #guard ! dualCheck 5 2 2 certFiveThree
+#guard ! dualCheck 5 2 3 (fun k => if k = 1 then 1 - 1 / 10 ^ 30 else 0)
+#guard ! dualCheck 5 2 3 (fun _ => 0)
 
 end Delsarte.Certificate

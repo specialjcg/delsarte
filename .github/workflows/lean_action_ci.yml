@@ -14,7 +14,25 @@ jobs:
 
     steps:
       - uses: actions/checkout@v5
+
+      # The toolchain is pinned on purpose and there is no mathlib update bot
+      # (removed in 68a5d61). Do not reintroduce one: a silent mathlib bump
+      # would change what the proofs mean without anyone reading the diff.
       - uses: leanprover/lean-action@v1
+        with:
+          # Without the cache a build starts from an empty mathlib and blows the
+          # runner quota.
+          use-mathlib-cache: true
+          # Fails if any declaration under `Delsarte` transitively depends on an
+          # axiom outside the allowlist. This catches `sorry` (`sorryAx`),
+          # `native_decide` (`Lean.ofReduceBool`) and any home-rolled axiom,
+          # including ones reaching in through imports. A `sorry` that compiles
+          # in silence is the worst failure mode this project has.
+          axiom-audit: true
+          axiom-audit-allow: "propext,Classical.choice,Quot.sound"
+          axiom-audit-root: "Delsarte"
+
+      # Cheap and instant, and it also covers files the root does not import.
       - name: Check for sorry
         run: |
           ! grep -rn --include='*.lean' -E '\bsorry\b' Delsarte/
