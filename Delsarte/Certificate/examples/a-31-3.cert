@@ -1,0 +1,8 @@
+# Certificat dual de Delsarte, produit par tools/delsarte_lp.py
+# Borne : A(31, 2, 3) <= 67108864.
+# Valeur vraie : 67108864 = 2^26, atteinte par le code de Hamming parfait [31,26,3].
+# Borne de Hamming pour comparaison : 67108864.
+n 31
+q 2
+d 3
+y 1 23/30 3/4 79/140 15/28 11/28 5/14 53/210 3/14 1/7 3/28 9/140 1/28 1/60 0 0 0 1/70 1/28 5/84 3/28 19/140 3/14 17/70 5/14 8/21 15/28 11/20 3/4 3/4 1

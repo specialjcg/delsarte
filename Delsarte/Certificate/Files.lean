@@ -73,6 +73,14 @@ set_option linter.hashCommand false
 #guard fileAgrees (include_str "examples/a-12-6.cert") 12 2 6 cert12_6
 #guard fileAgrees (include_str "examples/a-15-6.cert") 15 2 6 cert15_6
 #guard fileAgrees (include_str "examples/a-24-8.cert") 24 2 8 cert24_8
+#guard fileAgrees (include_str "examples/a-16-4.cert") 16 2 4 cert16_4
+#guard fileAgrees (include_str "examples/a-16-6.cert") 16 2 6 cert16_6
+#guard fileAgrees (include_str "examples/a-16-8.cert") 16 2 8 cert16_8
+#guard fileAgrees (include_str "examples/a-21-7.cert") 21 2 7 cert21_7
+#guard fileAgrees (include_str "examples/a-22-7.cert") 22 2 7 cert22_7
+#guard fileAgrees (include_str "examples/a-26-5.cert") 26 2 5 cert26_5
+#guard fileAgrees (include_str "examples/a-31-3.cert") 31 2 3 cert31_3
+#guard fileAgrees (include_str "examples/a-32-4.cert") 32 2 4 cert32_4
 #guard fileParsesButFails (include_str "examples/bad-not-feasible.cert")
 
 end Delsarte.Certificate

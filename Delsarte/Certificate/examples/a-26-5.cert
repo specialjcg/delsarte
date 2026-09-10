@@ -1,0 +1,8 @@
+# Certificat dual de Delsarte, produit par tools/delsarte_lp.py
+# Borne : A(26, 2, 5) <= 163840.
+# Atteinte non revendiquee : aucune construction n'est citee ici pour 163840.
+# Borne de Hamming pour comparaison : 190650.
+n 26
+q 2
+d 5
+y 35/48 49/96 7/20 9/40 9/64 5/64 1/24 1/60 1/160 0 0 0 1/960 1/960 0 0 0 1/160 1/60 1/24 5/64 9/64 9/40 7/20 49/96 35/48

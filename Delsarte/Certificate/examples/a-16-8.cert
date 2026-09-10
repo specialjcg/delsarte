@@ -1,0 +1,8 @@
+# Certificat dual de Delsarte, produit par tools/delsarte_lp.py
+# Borne : A(16, 2, 8) <= 32.
+# Valeur vraie : 32, atteinte par le code de Reed-Muller d'ordre 1, RM(1,4) = [16,5,8].
+# Borne de Hamming pour comparaison : 94.
+n 16
+q 2
+d 8
+y 1 1/8 0 0 0 0 0 0 0 0 0 0 0 0 0 0

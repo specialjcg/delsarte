@@ -17,4 +17,6 @@ import Delsarte.Certificate.Files
 import Delsarte.Certificate.Table1
 import Delsarte.Certificate.Table2
 import Delsarte.Certificate.Table3
+import Delsarte.Certificate.Table4
+import Delsarte.Certificate.Table5
 import Delsarte.Certificate.Table

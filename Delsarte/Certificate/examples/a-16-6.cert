@@ -1,0 +1,8 @@
+# Certificat dual de Delsarte, produit par tools/delsarte_lp.py
+# Borne : A(16, 2, 6) <= 256.
+# Valeur vraie : 256, atteinte par le code de Nordstrom-Robinson (non lineaire).
+# Borne de Hamming pour comparaison : 478.
+n 16
+q 2
+d 6
+y 495/688 3/10 449/3010 477/12040 9/2408 0 0 0 1/688 0 0 25/2408 0 0 0 0

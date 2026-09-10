@@ -1,0 +1,8 @@
+# Certificat dual de Delsarte, produit par tools/delsarte_lp.py
+# Borne : A(21, 2, 7) <= 1024.
+# Valeur vraie : 1024, atteinte par le code de Golay raccourci deux fois, [21,10,7].
+# Borne de Hamming pour comparaison : 1342.
+n 21
+q 2
+d 7
+y 71/91 11/26 17/91 3/52 5/364 0 0 0 0 0 0 0 0 0 0 0 0 3/182 1/13 99/364 37/52

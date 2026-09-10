@@ -6,6 +6,8 @@ Authors: Jean-Charles Gouleau
 import Delsarte.Certificate.Table1
 import Delsarte.Certificate.Table2
 import Delsarte.Certificate.Table3
+import Delsarte.Certificate.Table4
+import Delsarte.Certificate.Table5
 
 /-!
 # A table of certified bounds on `A(n, 2, d)`
@@ -55,6 +57,15 @@ A table showing only its successes would be advertising.
 Every other row is tight, and every row beats the sphere-packing bound in the
 last column — which is the point. These are bounds the linear program earns and
 elementary counting does not.
+
+## Beyond `n = 24`
+
+`Delsarte/Certificate/Table4.lean` and `Table5.lean` carry eight more bounds, from
+`n = 16` to `n = 32`, including `A(31,2,3) ≤ 2 ^ 26` and `A(32,2,4) ≤ 2 ^ 26`. They are in
+their own module because they were added once the checks became kernel reduction
+in `ℤ` rather than `norm_num` in `ℚ`; at the old price they would have cost minutes
+of build. That module's table also carries the one row where the linear program
+earns nothing over counting, which the rows above do not show.
 -/
 
 namespace Delsarte.Certificate

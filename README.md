@@ -19,10 +19,11 @@ certificats qui en découlent.
 | Vérificateur de certificat dual, exact sur ℚ | **démontré** — `Delsarte/Certificate/Verify.lean` |
 | Vérificateur de positivité sur intervalle, certificat SOS | **démontré** — `Delsarte/Certificate/Interval.lean` |
 | Bornes démontrées : `A(5,2,3) ≤ 4`, `A(13,2,5) ≤ 64`, `A(23,2,7) ≤ 4096` | **démontré** — `Delsarte/Certificate/Bounds.lean` |
-| Table de 12 bornes supplémentaires, jusqu'à `A(24,2,8) ≤ 4096` | **démontré** — `Delsarte/Certificate/Table.lean` |
+| Table de 20 bornes supplémentaires, jusqu'à `A(32,2,4) ≤ 2^26` | **démontré** — `Delsarte/Certificate/Table.lean` |
+| Vérification des certificats en entiers, décidée par le noyau | **démontré** — `Delsarte/Certificate/Integer.lean` |
 | Solveur LP exact en rationnels (hors base de confiance) | **livré** — `tools/delsarte_lp.py` |
 | Parseur de fichier certificat + exécutable de rejeu | **livré** — `Delsarte/Certificate/Parse.lean`, `Main.lean` |
-| Polynômes de Gegenbauer : définition, normalisation, ancrage Chebyshev | **démontré** — `Delsarte/Gegenbauer/Basic.lean` |
+| Polynômes de Gegenbauer : définition, normalisation, ancrages Chebyshev `T` (`d = 2`) et `U` (`d = 4`) | **démontré** — `Delsarte/Gegenbauer/Basic.lean` |
 | LP d'Odlyzko–Sloane sur la sphère : borne conditionnelle | **démontré** — `Delsarte/Sphere/LP.lean` |
 | Positivité de Schoenberg `Σ G_k(⟨x_i,x_j⟩) ≥ 0`, degrés 0 et 1, toute dimension | **démontré** — `Delsarte/Sphere/LP.lean` |
 | Positivité de Schoenberg en dimension 2, tout degré | **démontré** — `Delsarte/Sphere/Dim2.lean` |
@@ -48,8 +49,26 @@ serrées ; la douzième, `A(12,2,5) ≤ 40`, ne l'est pas — la vraie valeur es
 et elle est gardée pour cette raison. Une table qui ne montrerait que ses succès
 serait de la réclame.
 
-Les déclarations de cette table sont **générées** par le solveur puis revérifiées
-par Lean, parce que recopier douze certificats à la main est le bon moyen
+`Table4.lean` et `Table5.lean` en ajoutent huit autres, de `A(16,2,4) ≤ 2048` à
+`A(32,2,4) ≤ 2^26`, avec le code atteignant nommé quand il y en a un — Hamming
+étendu, Nordstrom–Robinson, Reed–Muller, Golay raccourci. Deux d'entre elles
+méritent d'être lues ensemble : `A(31,2,3) ≤ 2^26` est la seule ligne du dépôt où
+le programme linéaire ne gagne **rien** — sa borne égale celle de Hamming à
+l'unité près, ce qui est la définition d'un code parfait — tandis qu'à
+`A(32,2,4)` la même famille gagne presque un facteur deux sur le dénombrement.
+`A(26,2,5) ≤ 163840` ne revendique aucune atteinte : la borne est seule.
+
+Ces huit bornes n'existent que parce que les certificats sont désormais vérifiés
+en entiers, par réduction du noyau, et non plus par `norm_num` sur des
+rationnels : le vérificateur met le certificat à l'échelle de son dénominateur
+commun, construit la table de Krawtchouk par récurrence aux différences depuis
+une ligne de Pascal, et `decide` fait le reste. Le prix d'une borne est passé de
+dizaines de secondes à des millisecondes ; c'est ce qui a rendu `n = 32`
+abordable. Aucun `native_decide` : `#print axioms` ne donne toujours que
+`propext`, `Classical.choice`, `Quot.sound`.
+
+Les déclarations de ces tables sont **générées** par le solveur puis revérifiées
+par Lean, parce que recopier vingt certificats à la main est le bon moyen
 d'introduire une faute qu'aucun théorème n'attraperait : un `y` erroné est
 généralement irréalisable, mais il peut aussi être réalisable et démontrer une
 borne *différente*, plus faible, sans que personne le voie.

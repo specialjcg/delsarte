@@ -1,0 +1,8 @@
+# Certificat dual de Delsarte, produit par tools/delsarte_lp.py
+# Borne : A(16, 2, 4) <= 2048.
+# Valeur vraie : 2048, atteinte par le code de Hamming etendu [16,11,4].
+# Borne de Hamming pour comparaison : 3855.
+n 16
+q 2
+d 4
+y 1 9/16 27/56 11/56 23/168 1/56 0 0 0 5/112 5/168 3/56 1/56 0 0 0
