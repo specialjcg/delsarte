@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Jean-Charles Gouleau
 -/
 import Delsarte.Hamming.LP
+import Delsarte.Krawtchouk.Subsets
 import Mathlib.Algebra.BigOperators.Ring.Finset
 import Mathlib.Data.Finset.Powerset
 
@@ -74,51 +75,15 @@ theorem chi_mul (u : Finset (Fin n)) (x y : Word n 2) :
   rw [chi, chi, ← pow_add, card_filter_add_card_filter, pow_add, pow_mul]
   norm_num
 
-open Polynomial in
 /-- The Krawtchouk value `K_k(|S|)` is the character sum over all `u` of size
-`k`. Proved by expanding `∏_j (±X + 1)` over the powerset and reading off the
-coefficient of `X^k`. -/
+`k`. The generating-function computation lives in
+`Delsarte/Krawtchouk/Subsets.lean`, shared with the `q`-ary route so that the two
+cannot drift apart; that file is rational throughout, so this proof still never
+leaves `ℚ`. -/
 theorem sum_neg_one_pow_inter (S : Finset (Fin n)) (k : ℕ) :
     ∑ u ∈ Finset.powersetCard k (Finset.univ : Finset (Fin n)), (-1 : ℚ) ^ (u ∩ S).card
-      = krawtchouk n 2 k S.card := by
-  have hprod : ∀ t : Finset (Fin n),
-      (∏ j ∈ t, (if j ∈ S then (-1 : ℚ) else 1)) = (-1 : ℚ) ^ (t ∩ S).card := by
-    intro t
-    rw [Finset.prod_ite, Finset.prod_const, Finset.prod_const_one, mul_one,
-      Finset.filter_mem_eq_inter]
-  have hS : (Finset.univ.filter fun j : Fin n => j ∈ S) = S := by
-    rw [Finset.filter_mem_eq_inter, Finset.univ_inter]
-  have hSc : (Finset.univ.filter fun j : Fin n => ¬ j ∈ S) = Sᶜ := by
-    ext j; simp
-  have hpoly : (∏ j : Fin n, (C (if j ∈ S then (-1 : ℚ) else 1) * X + 1))
-      = krawtchoukPoly n 2 S.card := by
-    rw [← Finset.prod_filter_mul_prod_filter_not Finset.univ (fun j : Fin n => j ∈ S), hS, hSc]
-    have h1 : ∏ j ∈ S, (C (if j ∈ S then (-1 : ℚ) else 1) * X + 1)
-        = ∏ _j ∈ S, (C (-1 : ℚ) * X + 1) :=
-      Finset.prod_congr rfl fun j hj => by rw [if_pos hj]
-    have h2 : ∏ j ∈ Sᶜ, (C (if j ∈ S then (-1 : ℚ) else 1) * X + 1)
-        = ∏ _j ∈ Sᶜ, (C (1 : ℚ) * X + 1) :=
-      Finset.prod_congr rfl fun j hj => by rw [if_neg (Finset.mem_compl.mp hj)]
-    have hq : ((2 : ℕ) : ℚ) - 1 = 1 := by norm_num
-    rw [h1, h2, Finset.prod_const, Finset.prod_const, Finset.card_compl, Fintype.card_fin,
-      krawtchoukPoly, hq]
-    ring
-  have hexp : (∏ j : Fin n, (C (if j ∈ S then (-1 : ℚ) else 1) * X + 1))
-      = ∑ t ∈ (Finset.univ : Finset (Fin n)).powerset,
-          C ((-1 : ℚ) ^ (t ∩ S).card) * X ^ t.card := by
-    rw [Finset.prod_add]
-    refine Finset.sum_congr rfl fun t _ => ?_
-    rw [Finset.prod_const_one, mul_one, Finset.prod_mul_distrib, Finset.prod_const,
-      ← map_prod, hprod t]
-  have hcoeff : Polynomial.coeff (∑ t ∈ (Finset.univ : Finset (Fin n)).powerset,
-      C ((-1 : ℚ) ^ (t ∩ S).card) * X ^ t.card) k = krawtchouk n 2 k S.card := by
-    rw [hexp.symm.trans hpoly, coeff_krawtchoukPoly]
-  rw [← hcoeff, Polynomial.finsetSum_coeff, Finset.powersetCard_eq_filter, Finset.sum_filter]
-  refine Finset.sum_congr rfl fun t _ => ?_
-  rw [Polynomial.coeff_C_mul, Polynomial.coeff_X_pow]
-  by_cases h : t.card = k
-  · simp [h]
-  · simp [h, Ne.symm h]
+      = krawtchouk n 2 k S.card :=
+  sum_powersetCard_neg_one_pow S k
 
 /-- The character sum at a pair of words evaluates the Krawtchouk polynomial at
 their Hamming distance. -/

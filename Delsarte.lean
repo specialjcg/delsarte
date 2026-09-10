@@ -1,9 +1,11 @@
 import Delsarte.LP.WeakDuality
 import Delsarte.Code.Basic
 import Delsarte.Krawtchouk.Basic
+import Delsarte.Krawtchouk.Subsets
 import Delsarte.Hamming.LP
 import Delsarte.Hamming.Feasible
 import Delsarte.Hamming.CharQ
+import Delsarte.Hamming.Shell
 import Delsarte.Certificate.Verify
 import Delsarte.Certificate.Integer
 import Delsarte.Certificate.Interval
