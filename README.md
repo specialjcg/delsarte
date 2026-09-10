@@ -117,6 +117,12 @@ lake exe cache get   # oléans mathlib pré-compilés
 lake build
 ```
 
+Reconstruire toute la bibliothèque, mathlib en cache : **~67 s** (2409 jobs).
+Environ 80 % de ce temps est dans les certificats — l'arithmétique rationnelle
+exacte, pas les imports. Seuil : si ce chiffre dépasse deux minutes, regarder
+d'abord ce qui a été ajouté à `Delsarte/Certificate/`, ensuite seulement les
+imports.
+
 Lean `v4.33.1`, mathlib épinglée sur la même révision. L'épinglage est
 délibéré : pas de bot de mise à jour. Une montée de version silencieuse de
 mathlib changerait ce que les preuves signifient sans que personne ne lise le

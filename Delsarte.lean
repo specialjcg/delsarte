@@ -10,6 +10,10 @@ import Delsarte.Sphere.LP
 import Delsarte.Sphere.Dim2
 import Delsarte.Sphere.DegreeTwo
 import Delsarte.Certificate.Bounds
+import Delsarte.Certificate.Golay
 import Delsarte.Certificate.Parse
 import Delsarte.Certificate.Files
+import Delsarte.Certificate.Table1
+import Delsarte.Certificate.Table2
+import Delsarte.Certificate.Table3
 import Delsarte.Certificate.Table

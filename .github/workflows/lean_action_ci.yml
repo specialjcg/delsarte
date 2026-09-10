@@ -36,3 +36,9 @@ jobs:
       - name: Check for sorry
         run: |
           ! grep -rn --include='*.lean' -E '\bsorry\b' Delsarte/
+
+      # A bare `import Mathlib` pulls the whole library and the discipline is
+      # lost silently. Every module here names the modules it needs.
+      - name: Check for a bare Mathlib import
+        run: |
+          ! grep -rn --include='*.lean' -E '^import Mathlib$' Delsarte/ Main.lean

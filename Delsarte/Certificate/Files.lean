@@ -4,6 +4,8 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Jean-Charles Gouleau
 -/
 import Delsarte.Certificate.Parse
+import Delsarte.Certificate.Bounds
+import Delsarte.Certificate.Golay
 import Delsarte.Certificate.Table
 
 /-!
