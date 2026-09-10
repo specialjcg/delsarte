@@ -3,6 +3,7 @@ Copyright (c) 2026 Jean-Charles Gouleau. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Jean-Charles Gouleau
 -/
+import Mathlib.Algebra.Polynomial.Roots
 import Mathlib.RingTheory.Polynomial.Chebyshev
 import Mathlib.Tactic.FieldSimp
 import Mathlib.Tactic.Positivity
@@ -257,6 +258,72 @@ theorem gegenbauer_deg_three_dim_twentyFour (t : ℚ) :
     gegenbauer 24 3 t = t * (26 * t ^ 2 - 3) / 23 := by
   rw [gegenbauer_deg_three (by norm_num)]; push_cast; ring
 
+/-! ## Second anchor: dimension 4 is Chebyshev `U`, scaled by `1 / (k + 1)`
+
+One anchor cannot catch an error that happens to vanish where it is taken. At
+`d = 2` the coefficients of the recurrence collapse to `2` and `1`, so
+`gegenbauerPoly_dim_two` tests the recurrence only at that degenerate point.
+Dimension 4 is the other place where the recurrence meets a mathlib family:
+there it reads
+
+`G_(k+2) = (2k+4)/(k+3) X G_(k+1) - (k+1)/(k+3) G_k`,
+
+and substituting `G_k = U_k / (k+1)` returns `U_(k+2) = 2 X U_(k+1) - U_k`,
+which is `Chebyshev.U_add_two`. The scaling factor is forced, not chosen:
+`U_k 1 = k + 1` while our normalization demands `G_k 1 = 1`.
+-/
+
+theorem gegenbauerPoly_dim_four (k : ℕ) :
+    gegenbauerPoly 4 k = C (1 / ((k : ℚ) + 1)) * Chebyshev.U ℚ (k : ℤ) := by
+  induction k using Nat.twoStepInduction with
+  | zero => simp
+  | one =>
+    have h2 : (C (1 / 2 : ℚ)) * 2 = 1 := by
+      rw [show (2 : ℚ[X]) = C (2 : ℚ) from by simp only [map_ofNat], ← C_mul]
+      norm_num
+    have hc : ((1 : ℕ) : ℤ) = 1 := by norm_num
+    rw [gegenbauerPoly_one, hc, Chebyshev.U_one, ← mul_assoc,
+      show (((1 : ℕ) : ℚ) + 1) = 2 from by norm_num, h2, one_mul]
+  | more k ih1 ih2 =>
+    have hi1 : ((k + 1 : ℕ) : ℤ) = (k : ℤ) + 1 := by push_cast; ring
+    have hi2 : ((k + 2 : ℕ) : ℤ) = (k : ℤ) + 2 := by push_cast; ring
+    have hk1 : ((k : ℚ) + 1) ≠ 0 := by positivity
+    have hk2 : ((k : ℚ) + 2) ≠ 0 := by positivity
+    have hk4 : ((k : ℚ) + 4 - 1) ≠ 0 := by
+      have : (0 : ℚ) ≤ (k : ℚ) := by positivity
+      intro h; linarith
+    rw [gegenbauerPoly_add_two, ih1, ih2, hi1, hi2, Chebyshev.U_add_two]
+    apply Polynomial.funext
+    intro x
+    simp only [eval_mul, eval_sub, eval_C, eval_X, eval_ofNat]
+    push_cast
+    field_simp
+    ring
+
+/-- The scaling in `gegenbauerPoly_dim_four` is consistent with the
+normalization: it recovers `G_k 1 = 1` at `d = 4` from mathlib's
+`U_k 1 = k + 1`, by a route that goes through neither the recurrence nor
+`gegenbauer_eval_one`. -/
+theorem gegenbauer_dim_four_eval_one (k : ℕ) : gegenbauer 4 k 1 = 1 := by
+  have h : ((Chebyshev.U ℚ (k : ℤ)).eval 1) = (k : ℚ) + 1 := by
+    rw [Chebyshev.U_eval_one]; push_cast; ring
+  have hk1 : ((k : ℚ) + 1) ≠ 0 := by positivity
+  rw [← eval_gegenbauerPoly, gegenbauerPoly_dim_four, eval_mul, eval_C, h]
+  field_simp
+
+/-- Negative control on the anchor: the `U`-anchor is specific to `d = 4`. In
+dimension 8 the same scaled Chebyshev polynomial is a different polynomial, so
+`gegenbauerPoly_dim_four` says something about the dimension and is not an
+identity that any `d` would satisfy. -/
+theorem gegenbauerPoly_dim_eight_ne_chebyshevU :
+    gegenbauerPoly 8 2 ≠ C (1 / 3 : ℚ) * Chebyshev.U ℚ 2 := by
+  intro h
+  have h0 := congrArg (fun p : ℚ[X] => p.eval 0) h
+  simp only [eval_mul, eval_C, Chebyshev.U_two, eval_sub, eval_pow, eval_X, eval_one,
+    eval_ofNat, eval_gegenbauerPoly] at h0
+  rw [gegenbauer_deg_two_dim_eight] at h0
+  norm_num at h0
+
 /-! ## Negative control
 
 A basis whose members were all nonnegative would make the LP hypothesis
@@ -291,5 +358,9 @@ set_option linter.hashCommand false
 #guard gegenbauer 3 4 1 == 1
 #guard gegenbauer 24 7 (-1) == -1
 #guard ! (gegenbauer 8 2 0 == 1/7)
+#guard gegenbauer 4 5 (1/3) == 115/729
+#guard gegenbauer 4 6 (-2/5) == 2353/15625
+-- Dimension 8 is not the `U`-anchor: `U_2 0 / 3 = -1/3`, while `G_2 0 = -1/7`.
+#guard ! (gegenbauer 8 2 0 == -1/3)
 
 end Delsarte
