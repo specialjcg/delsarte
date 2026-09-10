@@ -25,6 +25,7 @@ with resulting bound `A(n,2,d) <= 1 + sum_k y_k K_k(0)`.
 Everything is `fractions.Fraction`; there is no floating point anywhere.
 """
 
+from math import lcm
 from fractions import Fraction
 import sys
 
@@ -179,6 +180,33 @@ if __name__ == "__main__":
             print()
 
 
+def wrap_ints(nums, width=96, indent="   "):
+    """Format a list of integers as Lean source, wrapped to `width` columns."""
+    out, line = [], "["
+    for i, x in enumerate(nums):
+        piece = str(x) + (", " if i < len(nums) - 1 else "]")
+        if len(line) + len(piece) > width:
+            out.append(line.rstrip())
+            line = indent + piece
+        else:
+            line += piece
+    out.append(line)
+    return "\n".join(out)
+
+
+def wrap_doc(text, width=95):
+    """Wrap one docstring into Lean `/-- ... -/` lines."""
+    words, lines, cur = text.split(), [], "/--"
+    for w in words:
+        if len(cur) + 1 + len(w) > width:
+            lines.append(cur)
+            cur = w
+        else:
+            cur = cur + " " + w
+    lines.append(cur + " -/")
+    return lines
+
+
 def emit_lean(n, d, q=2):
     """Print the Lean declarations and the .cert body for one certificate.
 
@@ -193,34 +221,44 @@ def emit_lean(n, d, q=2):
     assert ok, "the candidate failed its own re-verification"
     assert bound.denominator == 1, f"bound {bound} is not an integer"
     name = f"cert{n}_{d}"
-    heartbeats = 400000 * max(1, (n + 4) // 5)
+    den = lcm(*[v.denominator for v in y])
+    p = [0] + [int(v * den) for v in y]
+    assert all(v >= 0 for v in p), "a scaled coefficient came out negative"
+    for i in range(d, n + 1):
+        slack = -sum(p[k] * K[k][i] for k in range(n + 1))
+        assert den <= slack, f"the scaled certificate fails at distance {i}"
+    rats = ", ".join(f"`y {k} = {y[k-1]}`" for k in range(1, n + 1) if y[k - 1] != 0)
     lines = []
-    lines.append(f"/-- Certificate for `n = {n}`, `d = {d}`; the linear program's optimum. -/")
-    lines.append(f"def {name} : ℕ → ℚ")
-    for k in range(1, n + 1):
-        if y[k - 1] != 0:
-            lines.append(f"  | {k} => {y[k-1]}")
-    lines.append("  | _ => 0")
+    lines.append(f"/-- Certificate for `n = {n}`, `d = {d}`, scaled by its common denominator")
+    lines.append(f"`{den}`. Index `0` is unused. -/")
+    lines.append(f"def {name}Int : List ℤ :=")
+    lines.append("  " + wrap_ints(p))
     lines.append("")
-    lines.append(f"set_option maxHeartbeats {heartbeats} in")
-    lines.append(f"-- {n - d + 1} dual constraints, each a sum of {n} Krawtchouk values")
-    lines.append(f"theorem dualCert_{name} : DualCert {n} {q} {d} {name} := by")
-    lines.append("  constructor")
-    lines.append(f"  · intro k hk; fin_cases hk <;> norm_num [{name}]")
-    lines.append("  · intro i hi")
-    lines.append("    fin_cases hi <;>")
-    lines.append(f"      rw [dualSlack_eq_rec {n} {q} _ _ (by norm_num)] <;>")
-    lines.append(f"      norm_num [{name}, krawtchoukRec, Finset.sum_Icc_succ_top]")
+    lines.append(f"/-- The common denominator of `{name}`. -/")
+    lines.append(f"def {name}Den : ℤ := {den}")
     lines.append("")
-    lines.append(f"set_option maxHeartbeats {heartbeats} in")
-    lines.append("-- the same unfolding, at i = 0")
-    lines.append(f"theorem bound_{name} : bound {n} {q} {name} = {bound} := by")
-    lines.append("  rw [bound_eq_rec]")
-    lines.append(f"  norm_num [{name}, krawtchoukRec, Finset.sum_Icc_succ_top]")
+    lines.extend(wrap_doc(f"The same certificate as rationals: {rats}. Derived from the "
+                          "integer form, so the two cannot drift apart."))
+    lines.append(f"def {name} : ℕ → ℚ := ratOfInt {name}Int {name}Den")
+    lines.append("")
+    lines.append(f"-- {n - d + 1} dual constraints, each a sum of {n} integer products")
+    check_line = f"theorem intCheck_{name} : intCheck {n} {d} {name}Int {name}Den = true := by decide"
+    if len(check_line) <= 100:
+        lines.append(check_line)
+    else:
+        lines.append(check_line[: -len(" decide")])
+        lines.append("  decide")
+    lines.append("")
+    lines.append(f"theorem dualCert_{name} : DualCert {n} 2 {d} {name} :=")
+    lines.append(f"  dualCert_of_intCheck intCheck_{name}")
     lines.append("")
     lines.append(f"theorem A_{n}_{q}_{d}_le : A {n} {q} {d} ≤ {bound} :=")
-    lines.append(f"  A_le_of_dualCert (by norm_num) dualCert_{name} "
-                 f"(by rw [bound_{name}]; norm_num)")
+    lines.append(f"  A_le_of_intCert (p := {name}Int) (D := {name}Den) (by norm_num) "
+                 f"intCheck_{name}")
+    lines.append("    (by decide)")
+    lines.append("")
+    lines.append(f"#guard dualCheck {n} {q} {d} {name}")
+    lines.append(f"#guard bound {n} {q} {name} == {bound}")
     print("\n".join(lines))
     print()
     cert = [f"n {n}", f"q {q}", f"d {d}", "y " + " ".join(str(v) for v in y)]

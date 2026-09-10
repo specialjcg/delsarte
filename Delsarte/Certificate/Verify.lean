@@ -44,6 +44,12 @@ Note that `decide` cannot close any of this: the kernel does not reduce `ℚ`
 arithmetic (`Rat.normalize` goes through `Nat.gcd`). Hence `norm_num`
 throughout, and no `native_decide` anywhere — `#print axioms` stays clean.
 
+That is why every certificate of any size lives in `Delsarte/Certificate/Integer.lean`
+instead: scaled by its common denominator, the same check is integer arithmetic,
+which the kernel *does* reduce, so `decide` closes it. This file keeps the rational
+verifier — it is the statement the theorems are about, and the small instance below
+exercises it — but the bounds are proved through the integer one.
+
 ## Replay
 
 The certificate file format is described in `Delsarte/Certificate/FORMAT.md`,

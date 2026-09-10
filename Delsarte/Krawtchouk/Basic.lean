@@ -267,6 +267,41 @@ theorem krawtchouk_recurrence (n q i k : ℕ) (hi : i ≤ n) :
   push_cast at hode ⊢
   linear_combination hode
 
+/-! ## The difference recurrence, in the evaluation point
+
+The three-term recurrence above steps in the degree `k` and divides by `k + 2`, so
+it lives in `ℚ` no matter how integral the values are. Stepping in the evaluation
+point `i` instead needs no division at all:
+
+`K_(k+1)(i+1) = K_(k+1)(i) - K_k(i) - (q-1) K_k(i+1)`.
+
+It comes from `(cX + 1) P_(i+1) = (1 - X) P_i` with `c = q - 1`, which holds
+because `P_i = (cX+1)^(n-i) (1-X)^i`. This is the recurrence a kernel-decidable
+verifier needs: with the first column `K_k(0) = C(n,k)` built by Pascal's rule,
+the whole table is integer additions.
+-/
+
+/-- The generating polynomials of two consecutive evaluation points, related
+without division. -/
+theorem C_mul_X_add_one_mul_krawtchoukPoly_succ (n q i : ℕ) (hi : i < n) :
+    (C ((q : ℚ) - 1) * X + 1) * krawtchoukPoly n q (i + 1)
+      = (C (-1 : ℚ) * X + 1) * krawtchoukPoly n q i := by
+  rw [krawtchoukPoly, krawtchoukPoly, show n - i = (n - (i + 1)) + 1 by omega, pow_succ,
+    pow_succ]
+  ring
+
+/-- **The difference recurrence.** No division, so it carries integer values to
+integer values. -/
+theorem krawtchouk_diff (n q k i : ℕ) (hi : i < n) :
+    krawtchouk n q (k + 1) (i + 1)
+      = krawtchouk n q (k + 1) i - krawtchouk n q k i
+        - ((q : ℚ) - 1) * krawtchouk n q k (i + 1) := by
+  have h := congrArg (fun p : ℚ[X] => p.coeff (k + 1))
+    (C_mul_X_add_one_mul_krawtchoukPoly_succ n q i hi)
+  simp only [add_mul, coeff_add, one_mul, mul_assoc, coeff_C_mul, coeff_X_mul,
+    coeff_krawtchoukPoly] at h
+  linarith [h]
+
 /-! ## A binomial-free evaluator
 
 The recurrence turned into a definition. `krawtchoukRec` computes the same values

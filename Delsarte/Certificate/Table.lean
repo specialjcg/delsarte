@@ -17,7 +17,12 @@ proof.
 
 The declarations live in `Table1`, `Table2` and `Table3`, which import only the
 verifier and therefore elaborate in parallel; this module is the index and the
-documentation. They are **generated** by `delsarte_lp.emit_lean` rather
+documentation. Every check there is decided by the kernel in `ℤ`, on the
+certificate scaled by its common denominator — see
+`Delsarte/Certificate/Integer.lean`; the `#guard` lines re-run the same
+certificates through the rational checker and the *binomial* definition of
+`krawtchouk`, so each bound is evaluated twice by routes that share no
+arithmetic. They are **generated** by `delsarte_lp.emit_lean` rather
 than typed. Transcribing a dozen certificates by hand is a good way to introduce a
 typo that no theorem would catch — a wrong `y` is usually infeasible, but it can
 also be feasible and prove a *different*, weaker bound without anyone noticing.

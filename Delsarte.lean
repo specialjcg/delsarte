@@ -4,6 +4,7 @@ import Delsarte.Krawtchouk.Basic
 import Delsarte.Hamming.LP
 import Delsarte.Hamming.Feasible
 import Delsarte.Certificate.Verify
+import Delsarte.Certificate.Integer
 import Delsarte.Certificate.Interval
 import Delsarte.Gegenbauer.Basic
 import Delsarte.Sphere.LP
