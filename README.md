@@ -21,6 +21,8 @@ certificats qui en découlent.
 | Vérificateur de positivité sur intervalle, certificat SOS | **démontré** — `Delsarte/Certificate/Interval.lean` |
 | Bornes démontrées : `A(5,2,3) ≤ 4`, `A(13,2,5) ≤ 64`, `A(23,2,7) ≤ 4096` | **démontré** — `Delsarte/Certificate/Bounds.lean` |
 | Table de 20 bornes supplémentaires, jusqu'à `A(32,2,4) ≤ 2^26` | **démontré** — `Delsarte/Certificate/Table.lean` |
+| Table de Krawtchouk entière pour un alphabet quelconque | **démontré** — `Delsarte/Certificate/IntTable.lean` |
+| Première borne q-aire : `A(11,3,5) ≤ 729`, atteinte par Golay ternaire | **démontré** — `Delsarte/Certificate/Ternary.lean` |
 | Vérification des certificats en entiers, décidée par le noyau | **démontré** — `Delsarte/Certificate/Integer.lean` |
 | Solveur LP exact en rationnels (hors base de confiance) | **livré** — `tools/delsarte_lp.py` |
 | Parseur de fichier certificat + exécutable de rejeu | **livré** — `Delsarte/Certificate/Parse.lean`, `Main.lean` |
@@ -136,11 +138,20 @@ de l'unité, donc l'argument quitte ℚ : la somme double sur les paires de mots
 `∑_u ‖∑_x χ_u(x)‖²`, un module au carré par vecteur d'indices de poids `k`. La
 redescente vers ℚ est explicite — injectivité de `Complex.ofReal`, positivité de
 `Complex.normSq`, `Rat.cast` qui reflète l'ordre — et le chaînage binaire reste
-séparé, entièrement dans ℚ, sans dépendance d'import vers ℂ. Ce qui n'est **pas**
-encore là côté q-aire : les certificats. `Delsarte/Certificate/Integer.lean`
-construit la table de Krawtchouk entière par une récurrence binaire, donc aucune
-borne ternaire n'est encore établie même si le théorème de solidité les couvre
-désormais.
+séparé, entièrement dans ℚ, sans dépendance d'import vers ℂ. Les certificats ont suivi : `Delsarte/Certificate/IntTable.lean`
+construit la table de Krawtchouk entière pour un alphabet quelconque, sans division
+— la colonne `0` est une ligne de Pascal **pondérée**, `W(n+1,k) = W(n,k) +
+(q-1) W(n,k-1)`, et le pas colonne-à-colonne est `K_(k+1)(i+1) = K_(k+1)(i) -
+K_k(i) - (q-1) K_k(i+1)` — donc `decide` reste le vérificateur. La première borne
+q-aire est `A(11,3,5) ≤ 729`, **atteinte** par le code de Golay ternaire, avec son
+fichier `.cert` replayé comme les autres.
+
+Les définitions binaires n'ont pas bougé d'un octet : les vingt-quatre certificats
+déjà démontrés réduisent à travers elles, et changer ce que le noyau réduit serait
+un risque pris pour rien. Ce sont leurs *preuves* qui ont disparu, remplacées par
+les preuves q-aires composées avec un pont — `krawCol n i = krawColQ n 2 i` — qui
+est un théorème et non une identité définitionnelle, donc aussi le contrôle
+anti-régression.
 
 Ce qui reste, côté sphère : `SchoenbergPos` n'était qu'une des trois hypothèses de
 `card_le_of_sphereCert`. Les deux autres — un certificat positif dans la base de

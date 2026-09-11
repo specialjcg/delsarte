@@ -55,7 +55,8 @@ def known : List (String × (Nat → ℚ)) :=
   , ("Delsarte/Certificate/examples/a-22-7.cert", cert22_7)
   , ("Delsarte/Certificate/examples/a-26-5.cert", cert26_5)
   , ("Delsarte/Certificate/examples/a-31-3.cert", cert31_3)
-  , ("Delsarte/Certificate/examples/a-32-4.cert", cert32_4) ]
+  , ("Delsarte/Certificate/examples/a-32-4.cert", cert32_4)
+  , ("Delsarte/Certificate/examples/a-11-3-5.cert", cert11_3_5) ]
 
 /-- Parse one file, run the checker, print the claim. -/
 def replay (path : String) : IO Bool := do

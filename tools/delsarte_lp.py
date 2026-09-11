@@ -173,7 +173,9 @@ def report(n, d, q=2):
 
 if __name__ == "__main__":
     if len(sys.argv) >= 3:
-        report(int(sys.argv[1]), int(sys.argv[2]))
+        # usage: delsarte_lp.py n d [q]   (q defaults to 2)
+        q = int(sys.argv[3]) if len(sys.argv) >= 4 else 2
+        report(int(sys.argv[1]), int(sys.argv[2]), q)
     else:
         for n, d in ((5, 3), (17, 8), (23, 7), (24, 10), (13, 5)):
             report(n, d)

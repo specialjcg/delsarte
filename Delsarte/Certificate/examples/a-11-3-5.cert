@@ -1,0 +1,9 @@
+# Certificat dual de Delsarte, alphabet ternaire
+# Borne : A(11, 3, 5) <= 729.  Valeur vraie : 729, atteinte par le code de Golay
+# ternaire. La borne est serree : l'optimum du LP vaut exactement 729.
+# Le nom du fichier porte n, q, d, l'alphabet n'etant plus binaire.
+# Voir Delsarte/Certificate/FORMAT.md
+n 11
+q 3
+d 5
+y 1 8/15 11/60 1/30 0 0 0 0 0 0 1/12

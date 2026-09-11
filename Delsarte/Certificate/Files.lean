@@ -6,6 +6,7 @@ Authors: Jean-Charles Gouleau
 import Delsarte.Certificate.Parse
 import Delsarte.Certificate.Bounds
 import Delsarte.Certificate.Golay
+import Delsarte.Certificate.Ternary
 import Delsarte.Certificate.Table
 
 /-!
@@ -81,6 +82,7 @@ set_option linter.hashCommand false
 #guard fileAgrees (include_str "examples/a-26-5.cert") 26 2 5 cert26_5
 #guard fileAgrees (include_str "examples/a-31-3.cert") 31 2 3 cert31_3
 #guard fileAgrees (include_str "examples/a-32-4.cert") 32 2 4 cert32_4
+#guard fileAgrees (include_str "examples/a-11-3-5.cert") 11 3 5 cert11_3_5
 #guard fileParsesButFails (include_str "examples/bad-not-feasible.cert")
 
 end Delsarte.Certificate

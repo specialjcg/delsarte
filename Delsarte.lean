@@ -8,6 +8,7 @@ import Delsarte.Hamming.Feasible
 import Delsarte.Hamming.CharQ
 import Delsarte.Hamming.Shell
 import Delsarte.Hamming.FeasibleQ
+import Delsarte.Certificate.IntTable
 import Delsarte.Certificate.Verify
 import Delsarte.Certificate.Integer
 import Delsarte.Certificate.Interval
@@ -21,6 +22,7 @@ import Delsarte.Sphere.DegreeThree
 import Delsarte.Sphere.Schoenberg
 import Delsarte.Certificate.Bounds
 import Delsarte.Certificate.Golay
+import Delsarte.Certificate.Ternary
 import Delsarte.Certificate.Parse
 import Delsarte.Certificate.Files
 import Delsarte.Certificate.Table1

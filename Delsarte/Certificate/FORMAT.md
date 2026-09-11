@@ -57,13 +57,17 @@ Sur l'exemple : les pentes duales aux distances 3, 4, 5 valent `1, 3, 5`, et la
 borne vaut `1 + K_1(0) = 6`. La vraie valeur est `A(5,3) = 4` — le certificat
 est valide, pas serré.
 
-**Aujourd'hui la garantie ne couvre que `q = 2`.** Le théorème
-`A_le_bound_of_dualCert` est énoncé pour l'alphabet binaire, parce que la
-réalisabilité primale n'est démontrée que là (voir `Delsarte/Hamming/Feasible.lean`
-et l'issue #13). La clé `q` existe déjà dans le format pour que les certificats
-`q`-aires soient écrivables sans changer le format le jour où le théorème
-tombera ; en attendant, un certificat avec `q ≠ 2` est bien formé mais aucune
-borne ne s'en déduit.
+**La garantie couvre tout `q ≥ 1`.** Le théorème
+`A_le_bound_of_dualCheck_qary` s'appuie sur la réalisabilité primale `q`-aire de
+`Delsarte/Hamming/FeasibleQ.lean`, et la table de Krawtchouk entière que le noyau
+réduit est construite pour un alphabet quelconque dans
+`Delsarte/Certificate/IntTable.lean`. La clé `q` du format n'est donc plus
+décorative : `examples/a-11-3-5.cert` est un certificat ternaire, replayé comme les
+autres, et la borne `A(11,3,5) ≤ 729` qu'il porte est démontrée dans
+`Delsarte/Certificate/Ternary.lean`.
+
+Le nom des fichiers binaires reste `a-<n>-<d>.cert` ; au-delà, il porte les trois
+paramètres, `a-<n>-<q>-<d>.cert`.
 
 ## Base de confiance
 
