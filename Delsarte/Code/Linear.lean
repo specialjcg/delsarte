@@ -190,22 +190,48 @@ theorem hammingDist_cword (row : ℕ → ℕ → Bool) (k n m m' : ℕ) :
 One decidable check per code; everything else is generic.
 -/
 
-/-- The check the kernel runs: every nonzero message below `2 ^ k` encodes to a
-codeword of weight at least `d`. -/
+/-- What the constructions below need: every nonzero message under `2 ^ k`
+encodes to a codeword of weight at least `d`. -/
+def MinWt (row : ℕ → ℕ → Bool) (k n d : ℕ) : Prop :=
+  ∀ m < 2 ^ k, m ≠ 0 → d ≤ cwt row k n m
+
+/-- The check the kernel runs, in one piece. -/
 def minWtCheck (row : ℕ → ℕ → Bool) (k n d : ℕ) : Bool :=
   (List.range (2 ^ k)).all fun m => m == 0 || decide (d ≤ cwt row k n m)
 
+/-- The same check restricted to the messages `lo, …, lo + len - 1`.
+
+The split exists for one reason, and it is not tidiness. The kernel caches every
+weak-head normal form it computes, and the cache is never pruned inside a single
+declaration, so one `decide` over the 4096 Golay codewords peaks near 23 GB and
+is killed on a CI runner with 16. Each declaration is checked with a fresh
+cache, so eight declarations of 512 messages peak at an eighth of that. The
+arithmetic done is identical; only the peak differs. -/
+def minWtCheckFrom (row : ℕ → ℕ → Bool) (k n d lo len : ℕ) : Bool :=
+  (List.range' lo len).all fun m => m == 0 || decide (d ≤ cwt row k n m)
+
 theorem minWt_of_check {row : ℕ → ℕ → Bool} {k n d : ℕ} (h : minWtCheck row k n d = true) :
-    ∀ m < 2 ^ k, m ≠ 0 → d ≤ cwt row k n m := by
+    MinWt row k n d := by
   intro m hm hm0
   have h1 := List.all_eq_true.mp h m (List.mem_range.mpr hm)
   rcases Bool.or_eq_true _ _ |>.mp h1 with h2 | h2
   · exact absurd (by simpa using h2) hm0
   · exact of_decide_eq_true h2
 
+/-- One chunk of the check, read back as a statement about the messages it
+covers. Assembling the chunks is left to the call site, where the arithmetic is
+concrete. -/
+theorem minWtFrom_of_check {row : ℕ → ℕ → Bool} {k n d lo len : ℕ}
+    (h : minWtCheckFrom row k n d lo len = true) :
+    ∀ m, lo ≤ m → m < lo + len → m ≠ 0 → d ≤ cwt row k n m := by
+  intro m h1 h2 hm0
+  have hall := List.all_eq_true.mp h m (List.mem_range'_1.mpr ⟨h1, h2⟩)
+  rcases Bool.or_eq_true _ _ |>.mp hall with h3 | h3
+  · exact absurd (by simpa using h3) hm0
+  · exact of_decide_eq_true h3
+
 /-- The generated code meets the minimum distance the weight check reports. -/
-theorem minDistAtLeast_linCode {row : ℕ → ℕ → Bool} {k n d : ℕ}
-    (h : minWtCheck row k n d = true) :
+theorem minDistAtLeast_linCode {row : ℕ → ℕ → Bool} {k n d : ℕ} (hw : MinWt row k n d) :
     MinDistAtLeast d (linCode row k n) := by
   rintro x hx y hy hxy
   rw [linCode, Finset.mem_image] at hx hy
@@ -214,12 +240,11 @@ theorem minDistAtLeast_linCode {row : ℕ → ℕ → Bool} {k n d : ℕ}
   rw [Finset.mem_range] at hm hm'
   have hne : m ≠ m' := by rintro rfl; exact hxy rfl
   rw [hammingDist_cword]
-  exact minWt_of_check h _ (xor_lt_two_pow hm hm') (xor_ne_zero hne)
+  exact hw _ (xor_lt_two_pow hm hm') (xor_ne_zero hne)
 
 /-- ...and it has exactly `2 ^ k` elements. Injectivity is read off the same
 check: equal codewords would force a nonzero message of weight `0 < d`. -/
-theorem card_linCode {row : ℕ → ℕ → Bool} {k n d : ℕ} (hd : 0 < d)
-    (h : minWtCheck row k n d = true) :
+theorem card_linCode {row : ℕ → ℕ → Bool} {k n d : ℕ} (hd : 0 < d) (hw : MinWt row k n d) :
     (linCode row k n).card = 2 ^ k := by
   rw [linCode, Finset.card_image_of_injOn, Finset.card_range]
   intro m hm m' hm' hmm
@@ -228,14 +253,13 @@ theorem card_linCode {row : ℕ → ℕ → Bool} {k n d : ℕ} (hd : 0 < d)
   have hdist : hammingDist (cword row k n m) (cword row k n m') = 0 := by
     rw [hmm, hammingDist_self]
   rw [hammingDist_cword] at hdist
-  have := minWt_of_check h _ (xor_lt_two_pow hm hm') (xor_ne_zero hne)
+  have := hw _ (xor_lt_two_pow hm hm') (xor_ne_zero hne)
   omega
 
 /-- **The lower bound.** A weight check that passes hands back `2 ^ k ≤ A n 2 d`. -/
-theorem two_pow_le_A {row : ℕ → ℕ → Bool} {k n d : ℕ} (hd : 0 < d)
-    (h : minWtCheck row k n d = true) :
+theorem two_pow_le_A {row : ℕ → ℕ → Bool} {k n d : ℕ} (hd : 0 < d) (hw : MinWt row k n d) :
     2 ^ k ≤ A n 2 d := by
-  have := card_le_A (minDistAtLeast_linCode h)
-  rwa [card_linCode hd h] at this
+  have := card_le_A (minDistAtLeast_linCode hw)
+  rwa [card_linCode hd hw] at this
 
 end Delsarte

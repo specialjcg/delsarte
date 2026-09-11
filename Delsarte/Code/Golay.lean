@@ -50,19 +50,30 @@ checker. Two rejections and two witnesses are recorded:
   explicit `m == 0` guard, and `cwt_golay_zero` shows what that guard is hiding
   — a word of weight 0, which would defeat any positive `d`.
 
-## What this file costs
+## What this file costs, and what that cost taught
 
-Roughly eight and a half minutes of elaboration, almost all of it in
-`minWtCheck_golay` and `minWtCheck_golay24`: two enumerations of 4096 codewords,
-each evaluated twice — once by the elaborator, once by the kernel.
+The first version compiled here in 8m40 and was **killed on the CI runner** at
+just under fifteen minutes. A proof that only builds on the author's machine is
+not a result, so the cost had to come down. Three changes did it, and each is
+worth recording because none of them touches a single proof.
 
-That is about four times the cost of the standalone probe that chose the
-representation, and the reason is visible in `cbit`: it recomputes `row i j` for
-every coordinate of every codeword, so `golayGen` is evaluated 276 times per
-word instead of the 12 it would take to build the word once as a list. Fixing it
-means carrying the codeword as a `List Bool` and re-proving `cbit_xor` through
-`List.zipWith`, which is a real amount of work for a build-time saving. Recorded
-here so the trade is visible rather than forgotten.
+1. *Generator rows as one numeral.* `golayGen` was a `match` on seven literals;
+   it is now the numeral 3189 read with `Nat.testBit`. The kernel special-cases
+   shifts and bit tests, a `match` on literals it does not. 8m40 → 4m27.
+2. *`decide +kernel`.* Plain `decide` evaluates twice, once in the elaborator and
+   once in the kernel. Only the kernel's verdict is trusted, so the elaborator's
+   pass is pure waste here.
+3. *Splitting the enumeration.* This was the one that mattered. The kernel caches
+   every weak-head normal form it computes and never prunes that cache inside a
+   declaration, so a single `decide` over 4096 codewords peaked at **22.9 GB** —
+   on a runner with 16. Eight declarations of 512 messages compute exactly the
+   same thing and peak at 6.4 GB. 3m48 in total.
+
+What remains inefficient is visible in `cbit`: it recomputes `row i j` for every
+coordinate of every codeword, so a row is read 23 times per word instead of
+once. Removing that means carrying codewords as `List Bool` and re-proving
+`cbit_xor` through `List.zipWith` — real work for a build-time saving, not taken.
+Recorded so the trade stays visible rather than forgotten.
 -/
 
 namespace Delsarte
@@ -73,26 +84,80 @@ set_option maxRecDepth 100000
 
 /-! ### The binary Golay code `[23,12,7]` -/
 
-/-- The coefficients of `g(x) = x^11 + x^10 + x^6 + x^5 + x^4 + x^2 + 1`, low
-degree first. -/
-def golayGen : ℕ → Bool
-  | 0 => true | 2 => true | 4 => true | 5 => true | 6 => true
-  | 10 => true | 11 => true
-  | _ => false
+/-- `g(x) = x^11 + x^10 + x^6 + x^5 + x^4 + x^2 + 1` packed into one numeral:
+bit `j` is the coefficient of `x^j`. `3189 = 1 + 4 + 16 + 32 + 64 + 1024 + 2048`.
 
-/-- Generator row `i` of the Golay code: the coefficients of `x^i g(x)`. -/
-def golayRow (i j : ℕ) : Bool := if i ≤ j then golayGen (j - i) else false
+Written this way rather than as a `match` on seven literals for a reason that is
+purely about cost: the kernel special-cases `Nat.shiftLeft` and `Nat.testBit`,
+so a row entry is three accelerated operations instead of a chain of equality
+tests. At 4096 codewords times 12 rows times 23 coordinates that difference
+decides whether the file builds on a CI runner. -/
+def golayGen : ℕ := 3189
+
+/-- Generator row `i` of the Golay code: the coefficients of `x^i g(x)`. The
+shift also supplies the `j < i` guard for free — the low bits of a shifted
+numeral are zero. -/
+def golayRow (i j : ℕ) : Bool := (golayGen <<< i).testBit j
+
+/-! **The minimum weight of the Golay code is at least 7**, in eight slices of
+512 messages. Each slice carries its own `maxHeartbeats`: the work is far past
+the default budget, and splitting it is what keeps the peak memory survivable. -/
 
 set_option maxHeartbeats 2000000 in
--- Enumerating the 4096 codewords and weighing each costs well over the default
--- budget. Scoped here and to the one other check that needs it.
-/-- **The minimum weight of the Golay code is at least 7.** 4095 nonzero
-messages weighed in the kernel. -/
-theorem minWtCheck_golay : minWtCheck golayRow 12 23 7 = true := by decide
+-- One slice of the enumeration: 512 codewords, far past the default budget.
+theorem golayChunk0 : minWtCheckFrom golayRow 12 23 7 0 512 = true := by decide +kernel
+
+set_option maxHeartbeats 2000000 in
+-- One slice of the enumeration: 512 codewords, far past the default budget.
+theorem golayChunk1 : minWtCheckFrom golayRow 12 23 7 512 512 = true := by decide +kernel
+
+set_option maxHeartbeats 2000000 in
+-- One slice of the enumeration: 512 codewords, far past the default budget.
+theorem golayChunk2 : minWtCheckFrom golayRow 12 23 7 1024 512 = true := by decide +kernel
+
+set_option maxHeartbeats 2000000 in
+-- One slice of the enumeration: 512 codewords, far past the default budget.
+theorem golayChunk3 : minWtCheckFrom golayRow 12 23 7 1536 512 = true := by decide +kernel
+
+set_option maxHeartbeats 2000000 in
+-- One slice of the enumeration: 512 codewords, far past the default budget.
+theorem golayChunk4 : minWtCheckFrom golayRow 12 23 7 2048 512 = true := by decide +kernel
+
+set_option maxHeartbeats 2000000 in
+-- One slice of the enumeration: 512 codewords, far past the default budget.
+theorem golayChunk5 : minWtCheckFrom golayRow 12 23 7 2560 512 = true := by decide +kernel
+
+set_option maxHeartbeats 2000000 in
+-- One slice of the enumeration: 512 codewords, far past the default budget.
+theorem golayChunk6 : minWtCheckFrom golayRow 12 23 7 3072 512 = true := by decide +kernel
+
+set_option maxHeartbeats 2000000 in
+-- One slice of the enumeration: 512 codewords, far past the default budget.
+theorem golayChunk7 : minWtCheckFrom golayRow 12 23 7 3584 512 = true := by decide +kernel
+
+/-- The eight chunks, reassembled. -/
+theorem minWt_golay : MinWt golayRow 12 23 7 := by
+  intro m hm hm0
+  rw [show (2 : ℕ) ^ 12 = 4096 from by norm_num] at hm
+  rcases lt_or_ge m 512 with h0 | h0
+  · exact minWtFrom_of_check golayChunk0 m (Nat.zero_le _) (by omega) hm0
+  rcases lt_or_ge m 1024 with h1 | h1
+  · exact minWtFrom_of_check golayChunk1 m h0 (by omega) hm0
+  rcases lt_or_ge m 1536 with h2 | h2
+  · exact minWtFrom_of_check golayChunk2 m h1 (by omega) hm0
+  rcases lt_or_ge m 2048 with h3 | h3
+  · exact minWtFrom_of_check golayChunk3 m h2 (by omega) hm0
+  rcases lt_or_ge m 2560 with h4 | h4
+  · exact minWtFrom_of_check golayChunk4 m h3 (by omega) hm0
+  rcases lt_or_ge m 3072 with h5 | h5
+  · exact minWtFrom_of_check golayChunk5 m h4 (by omega) hm0
+  rcases lt_or_ge m 3584 with h6 | h6
+  · exact minWtFrom_of_check golayChunk6 m h5 (by omega) hm0
+  exact minWtFrom_of_check golayChunk7 m h6 (by omega) hm0
 
 theorem A_twentyThree_two_seven_ge_4096 : 4096 ≤ A 23 2 7 := by
   have h := two_pow_le_A (row := golayRow) (k := 12) (n := 23) (d := 7)
-    (by norm_num) minWtCheck_golay
+    (by norm_num) minWt_golay
   norm_num at h
   exact h
 
@@ -105,15 +170,65 @@ theorem A_twentyThree_two_seven_eq_4096 : A 23 2 7 = 4096 :=
 
 /-- Generator row `i` of the extended Golay code: row `i` of the Golay code
 followed by its parity bit, which is `1` because `g` has odd weight 7. -/
-def golay24Row (i j : ℕ) : Bool := if j = 23 then true else golayRow i j
+def golay24Row (i j : ℕ) : Bool := ((golayGen <<< i) ||| (1 <<< 23)).testBit j
+
+/-! The same enumeration, one coordinate wider. -/
 
 set_option maxHeartbeats 2000000 in
--- Same enumeration as `minWtCheck_golay`, one coordinate wider.
-theorem minWtCheck_golay24 : minWtCheck golay24Row 12 24 8 = true := by decide
+-- One slice of the enumeration: 512 codewords, far past the default budget.
+theorem golay24Chunk0 : minWtCheckFrom golay24Row 12 24 8 0 512 = true := by decide +kernel
+
+set_option maxHeartbeats 2000000 in
+-- One slice of the enumeration: 512 codewords, far past the default budget.
+theorem golay24Chunk1 : minWtCheckFrom golay24Row 12 24 8 512 512 = true := by decide +kernel
+
+set_option maxHeartbeats 2000000 in
+-- One slice of the enumeration: 512 codewords, far past the default budget.
+theorem golay24Chunk2 : minWtCheckFrom golay24Row 12 24 8 1024 512 = true := by decide +kernel
+
+set_option maxHeartbeats 2000000 in
+-- One slice of the enumeration: 512 codewords, far past the default budget.
+theorem golay24Chunk3 : minWtCheckFrom golay24Row 12 24 8 1536 512 = true := by decide +kernel
+
+set_option maxHeartbeats 2000000 in
+-- One slice of the enumeration: 512 codewords, far past the default budget.
+theorem golay24Chunk4 : minWtCheckFrom golay24Row 12 24 8 2048 512 = true := by decide +kernel
+
+set_option maxHeartbeats 2000000 in
+-- One slice of the enumeration: 512 codewords, far past the default budget.
+theorem golay24Chunk5 : minWtCheckFrom golay24Row 12 24 8 2560 512 = true := by decide +kernel
+
+set_option maxHeartbeats 2000000 in
+-- One slice of the enumeration: 512 codewords, far past the default budget.
+theorem golay24Chunk6 : minWtCheckFrom golay24Row 12 24 8 3072 512 = true := by decide +kernel
+
+set_option maxHeartbeats 2000000 in
+-- One slice of the enumeration: 512 codewords, far past the default budget.
+theorem golay24Chunk7 : minWtCheckFrom golay24Row 12 24 8 3584 512 = true := by decide +kernel
+
+/-- The eight chunks, reassembled. -/
+theorem minWt_golay24 : MinWt golay24Row 12 24 8 := by
+  intro m hm hm0
+  rw [show (2 : ℕ) ^ 12 = 4096 from by norm_num] at hm
+  rcases lt_or_ge m 512 with h0 | h0
+  · exact minWtFrom_of_check golay24Chunk0 m (Nat.zero_le _) (by omega) hm0
+  rcases lt_or_ge m 1024 with h1 | h1
+  · exact minWtFrom_of_check golay24Chunk1 m h0 (by omega) hm0
+  rcases lt_or_ge m 1536 with h2 | h2
+  · exact minWtFrom_of_check golay24Chunk2 m h1 (by omega) hm0
+  rcases lt_or_ge m 2048 with h3 | h3
+  · exact minWtFrom_of_check golay24Chunk3 m h2 (by omega) hm0
+  rcases lt_or_ge m 2560 with h4 | h4
+  · exact minWtFrom_of_check golay24Chunk4 m h3 (by omega) hm0
+  rcases lt_or_ge m 3072 with h5 | h5
+  · exact minWtFrom_of_check golay24Chunk5 m h4 (by omega) hm0
+  rcases lt_or_ge m 3584 with h6 | h6
+  · exact minWtFrom_of_check golay24Chunk6 m h5 (by omega) hm0
+  exact minWtFrom_of_check golay24Chunk7 m h6 (by omega) hm0
 
 theorem A_24_2_8_ge : 4096 ≤ A 24 2 8 := by
   have h := two_pow_le_A (row := golay24Row) (k := 12) (n := 24) (d := 8)
-    (by norm_num) minWtCheck_golay24
+    (by norm_num) minWt_golay24
   norm_num at h
   exact h
 
@@ -133,11 +248,11 @@ def ham8Gen : List (List Bool) :=
 
 def ham8Row (i j : ℕ) : Bool := (ham8Gen.getD i []).getD j false
 
-theorem minWtCheck_ham8 : minWtCheck ham8Row 4 8 4 = true := by decide
+theorem minWtCheck_ham8 : minWtCheck ham8Row 4 8 4 = true := by decide +kernel
 
 theorem A_8_2_4_ge : 16 ≤ A 8 2 4 := by
   have h := two_pow_le_A (row := ham8Row) (k := 4) (n := 8) (d := 4)
-    (by norm_num) minWtCheck_ham8
+    (by norm_num) (minWt_of_check minWtCheck_ham8)
   norm_num at h
   exact h
 
@@ -158,20 +273,20 @@ def golayRowPerturbed (i j : ℕ) : Bool :=
 produces a codeword of weight 6, so the `d = 7` check fails. A checker that
 accepted this would certify nothing. -/
 theorem not_minWtCheck_golayPerturbed : minWtCheck golayRowPerturbed 12 23 7 = false := by
-  decide
+  decide +kernel
 
 /-- The rejection above is caused by a named codeword, not by an accident of the
 enumeration: the message `1` — the perturbed first generator row itself — has
 weight 6. Stating the witness costs one codeword instead of 4095. -/
-theorem cwt_golayPerturbed_one : cwt golayRowPerturbed 12 23 1 = 6 := by decide
+theorem cwt_golayPerturbed_one : cwt golayRowPerturbed 12 23 1 = 6 := by decide +kernel
 
 /-- **The `[8,4,4]` code has minimum distance exactly 4**, so the check at
 `d = 5` must fail. -/
-theorem not_minWtCheck_ham8_five : minWtCheck ham8Row 4 8 5 = false := by decide
+theorem not_minWtCheck_ham8_five : minWtCheck ham8Row 4 8 5 = false := by decide +kernel
 
 /-- What the `m == 0` guard hides: the zero message encodes to the zero word,
 which would defeat every positive `d`. Excluding it is the one step of the
 enumeration that is not a computation, so it is stated. -/
-theorem cwt_golay_zero : cwt golayRow 12 23 0 = 0 := by decide
+theorem cwt_golay_zero : cwt golayRow 12 23 0 = 0 := by decide +kernel
 
 end Delsarte

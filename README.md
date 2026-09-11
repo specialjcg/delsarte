@@ -83,6 +83,17 @@ le message `1` ; le code `[8,4,4]` échoue au test `d = 5`, comme il le doit ; e
 le mot nul, que l'énumération écarte par une garde explicite, est exhibé pour
 que cette garde ne reste pas muette.
 
+La première version compilait en 8 min 40 ici et a été **tuée par la CI** à
+quinze minutes. Un résultat qui ne se rejoue que sur la machine de l'auteur n'en
+est pas un, donc le coût a dû descendre — sans toucher à une seule preuve. Les
+lignes génératrices sont devenues un numéral lu au `Nat.testBit`, que le noyau
+accélère, au lieu d'un `match` sur sept littéraux ; `decide +kernel` a supprimé
+l'évaluation en double, l'élaborateur puis le noyau ; et surtout l'énumération a
+été découpée. Le noyau garde en cache chaque forme normale qu'il calcule et ne
+purge jamais ce cache à l'intérieur d'une déclaration : un seul `decide` sur
+4096 mots culminait à **22,9 Go**, sur un runner qui en a 16. Huit déclarations
+de 512 messages calculent exactement la même chose et culminent à 6,4 Go.
+
 Trois majorations restent sans minoration pour des raisons dites au fichier :
 `A(32,2,4) ≤ 2^26` demanderait d'énumérer 67 millions de mots, `A(16,2,6) ≤ 256`
 n'est atteinte que par Nordstrom–Robinson, **non linéaire**, et les bornes à 12,
