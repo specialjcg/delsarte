@@ -36,7 +36,9 @@ certificats qui en découlent.
 | Positivité de Schoenberg en dimension quelconque, **tout degré** | **démontré** — `Delsarte/Sphere/Schoenberg.lean` |
 | Produit de Fischer, laplacien, adjonction, reproduction | **démontré** — `Delsarte/Harmonic/Fischer.lean` |
 | Polynôme zonal harmonique, tout degré | **démontré** — `Delsarte/Harmonic/Zonal.lean` |
-| Kissing number en dimensions 8 et 24 | à faire |
+| Kissing number en dimension 8 : **majoration** `≤ 240` | **démontré** — `Delsarte/Sphere/Kissing.lean` |
+| Kissing number en dimension 24 : **majoration** `≤ 196560` | **démontré** — `Delsarte/Sphere/Kissing.lean` |
+| Kissing number, **minoration** (E8, Leech) | à faire |
 
 Sur l'alphabet binaire, la chaîne est complète de bout en bout : un vecteur de
 rationnels entre, une borne sur `A(n,2,d)` sort, et le solveur qui a produit le
@@ -153,12 +155,34 @@ les preuves q-aires composées avec un pont — `krawCol n i = krawColQ n 2 i` �
 est un théorème et non une identité définitionnelle, donc aussi le contrôle
 anti-régression.
 
-Ce qui reste, côté sphère : `SchoenbergPos` n'était qu'une des trois hypothèses de
-`card_le_of_sphereCert`. Les deux autres — un certificat positif dans la base de
-Gegenbauer, et négatif sur `[-1, 1/2]` — restent à fournir en dimensions 8 et 24,
-pour des polynômes de degré 9 ou plus. Le verrou a changé de nature, il n'a pas
-disparu : **aucune borne en dimension 8 ou 24 n'est établie ici**, et le kissing
-number reste devant.
+Les deux autres hypothèses de `card_le_of_sphereCert` sont maintenant fournies.
+Les certificats d'Odlyzko–Sloane ne viennent d'aucun solveur : ils sont forcés par
+les écarts complémentaires, c'est-à-dire par les produits scalaires qui se
+présentent vraiment hors diagonale — `{0, ±1/2, ±1}` pour E8, `{0, ±1/4, ±1/2,
+±1}` pour Leech — chacun racine double à l'intérieur, simple aux bords de
+`[-1, 1/2]` :
+
+```
+d = 8   f(t) = (t+1)(t+1/2)² t² (t-1/2)                        degré 6
+d = 24  f(t) = (t+1)(t+1/2)²(t+1/4)² t² (t-1/4)²(t-1/2)        degré 10
+```
+
+Les sept plus onze coefficients de Gegenbauer ont été calculés exactement sur
+`ℚ`, et
+l'identité `lpPoly d N f = <polynôme factorisé>` est revérifiée par le noyau :
+d'où viennent les nombres n'engage personne, `lpPoly_certKiss8` et
+`lpPoly_certKiss24` sont la vérification. La même factorisation donne le
+certificat d'intervalle gratuitement, un seul carré et un seul couple de
+multiplicateurs, `-f = (X+1)(1/2-X)·[X(X+1/2)⋯]²`.
+
+Les deux quotients `(∑ f_k) / f_0` valent **exactement** 240 et 196560 — pas
+approximativement, pas avec du jeu. Cette route est donc close par le haut.
+
+**Seules les majorations sont démontrées.** Les minorations sont des
+constructions — le système de racines E8 et le réseau de Leech — et aucune n'est
+formalisée ici. Le dépôt écrit `≤ 240` et `≤ 196560`, jamais `=`. Que les vraies
+valeurs soient 240 et 196560 est un fait mathématique, pas un fait sur ce dépôt ;
+ce qui reste non exclu, c'est toute valeur inférieure à ces bornes.
 
 La positivité démontrée est large, pas stricte — une paire antipodale annule la
 somme au degré 3 — et elle n'est pas une positivité terme à terme : `G_4` prend

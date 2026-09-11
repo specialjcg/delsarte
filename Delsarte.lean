@@ -20,6 +20,7 @@ import Delsarte.Sphere.Dim2
 import Delsarte.Sphere.DegreeTwo
 import Delsarte.Sphere.DegreeThree
 import Delsarte.Sphere.Schoenberg
+import Delsarte.Sphere.Kissing
 import Delsarte.Certificate.Bounds
 import Delsarte.Certificate.Golay
 import Delsarte.Certificate.Ternary
