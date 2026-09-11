@@ -31,7 +31,9 @@ certificats qui en découlent.
 | Borne démontrée sur le cercle : au plus 8 points, au moins 6 | **démontré** — `Delsarte/Sphere/Dim2.lean` |
 | Positivité de Schoenberg en dimension quelconque, degré 2 | **démontré** — `Delsarte/Sphere/DegreeTwo.lean` |
 | Positivité de Schoenberg en dimension quelconque, degré 3 | **démontré** — `Delsarte/Sphere/DegreeThree.lean` |
-| Positivité de Schoenberg en dimension quelconque, degré ≥ 4 | à faire — décomposition harmonique |
+| Positivité de Schoenberg en dimension quelconque, **tout degré** | **démontré** — `Delsarte/Sphere/Schoenberg.lean` |
+| Produit de Fischer, laplacien, adjonction, reproduction | **démontré** — `Delsarte/Harmonic/Fischer.lean` |
+| Polynôme zonal harmonique, tout degré | **démontré** — `Delsarte/Harmonic/Zonal.lean` |
 | Kissing number en dimensions 8 et 24 | à faire |
 
 Sur l'alphabet binaire, la chaîne est complète de bout en bout : un vecteur de
@@ -81,8 +83,12 @@ par l'hexagone régulier, construit et vérifié. La positivité de Schoenberg y
 démontrée pour tout degré, par une somme de carrés de réels — la transcription
 au cercle de l'argument binaire, sans harmoniques sphériques.
 
-En dimension quelconque, la borne d'Odlyzko–Sloane est démontrée mais
-**conditionnellement** à cette même positivité, établie aux degrés 0, 1, 2 et 3.
+En dimension quelconque, la positivité de Schoenberg est démontrée **à tout
+degré**, ce qui rend la borne d'Odlyzko–Sloane inconditionnelle sur ce point.
+Deux preuves indépendantes coexistent aux degrés 2 et 3, et les deux fichiers
+élémentaires restent en place : ils portent des témoins que l'argument général ne
+donne pas.
+
 Le degré 2 sort d'un Cauchy–Schwarz sur la matrice des moments seconds, et la
 borne y est atteinte à la configuration orthonormale. Le degré 3 demande
 strictement plus : le Cauchy–Schwarz naïf donne la constante `d` là où il faut
@@ -91,14 +97,32 @@ troisièmes. L'argument est un seul carré développé, celui de la partie
 harmonique du tenseur écrite à la main, et la constante obtenue est exacte —
 une paire antipodale annule la somme.
 
-Le degré 4 change de nature, et c'est là que le volet sphère s'arrête. La cible
-de la contraction cesse d'être irréductible : `C C*` y a deux valeurs propres au
-lieu d'une, l'inégalité passe à trois termes, et il faut le spectre, donc la
-décomposition harmonique des tenseurs symétriques. Mathlib ne l'a pas, et
-l'estimation honnête est de l'ordre de 1500 à 3000 lignes. Les certificats
-d'Odlyzko–Sloane en dimensions 8 et 24 étant de degré 9 ou plus, il n'y a pas
-non plus de raccourci par « seulement les degrés utiles » : `dim H_9 = 8008` en
-dimension 8.
+Le degré 4 change de nature : la cible de la contraction cesse d'être
+irréductible, `C C*` y a deux valeurs propres au lieu d'une, et aucun tenseur
+témoin ne se devine plus. L'argument élémentaire s'arrête là, et le degré
+arbitraire est traité autrement.
+
+Le mécanisme est un produit scalaire, pas un spectre. `Delsarte/Harmonic/Zonal.lean`
+construit le polynôme zonal `Z_k(x, ·)` par la récurrence de Gegenbauer
+**homogénéisée** — `t` remplacé par la forme linéaire `⟨x, ·⟩`, le terme constant
+multiplié par `‖x‖² ‖y‖²` — et démontre qu'il est harmonique. La preuve tient à
+une identité, `∑_i x_i ∂_i Z_(k+1) = (k+1) ‖x‖² Z_k`, dont le pas de récurrence
+se réduit à deux égalités entre fractions rationnelles en `k` et `d`.
+`Delsarte/Harmonic/Fischer.lean` fournit le produit `⟨p, q⟩ = Σ_α α! p_α q_α`, pour
+lequel multiplier par `‖y‖²` est adjoint au laplacien — avec constante exactement
+`1` — et pour lequel apparier contre `⟨y, ·⟩^k` **est** l'évaluation, au facteur
+`k!` près. La part non dominante de `Z_k(y, ·)` porte un facteur `‖y‖²` et meurt
+donc contre `Z_k(x, ·)` harmonique ; ce qui reste est une évaluation :
+
+    ⟨Z_k(x,·), Z_k(y,·)⟩ = lead_k · k! · G_k⟨x,y⟩,   lead_k > 0
+
+La matrice `G_k⟨x_i,x_j⟩` est donc une matrice de Gram divisée par un réel
+positif, et la double somme est un carré de norme. Ni harmoniques sphériques, ni
+`dim H_k`, ni somme directe orthogonale, ni projecteur : le vecteur harmonique est
+**écrit**, pas projeté, et c'est ce qui rend l'information spectrale inutile.
+L'estimation initiale de 1500 à 3000 lignes portait sur la construction par
+projection ; la construction par récurrence en demande 985, contrôles et prose
+compris.
 
 La condition `f(t) ≤ 0` sur un intervalle, qui n'est pas une somme finie, a son
 propre vérificateur : un certificat de sommes de carrés dans le module
@@ -118,10 +142,16 @@ construit la table de Krawtchouk entière par une récurrence binaire, donc aucu
 borne ternaire n'est encore établie même si le théorème de solidité les couvre
 désormais.
 
-Ce qui reste : la positivité de Schoenberg en degré ≥ 4 — le point dur, qui
-demande la décomposition harmonique des tenseurs symétriques. C'est le verrou
-unique. Aucune borne en dimension 8 ou 24 n'est établie ici, et le kissing number
-reste entièrement devant.
+Ce qui reste, côté sphère : `SchoenbergPos` n'était qu'une des trois hypothèses de
+`card_le_of_sphereCert`. Les deux autres — un certificat positif dans la base de
+Gegenbauer, et négatif sur `[-1, 1/2]` — restent à fournir en dimensions 8 et 24,
+pour des polynômes de degré 9 ou plus. Le verrou a changé de nature, il n'a pas
+disparu : **aucune borne en dimension 8 ou 24 n'est établie ici**, et le kissing
+number reste devant.
+
+La positivité démontrée est large, pas stricte — une paire antipodale annule la
+somme au degré 3 — et elle n'est pas une positivité terme à terme : `G_4` prend
+des valeurs négatives en dimension 8, `gegenbauer 8 4 (1/2) < 0` est démontré.
 
 ## Pourquoi la dualité faible suffit
 

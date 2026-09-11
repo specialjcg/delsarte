@@ -135,6 +135,14 @@ theorem fischer_add_left (p₁ p₂ q : MvPolynomial (Fin d) ℝ) :
     ← Finset.sum_add_distrib]
   exact Finset.sum_congr rfl fun α _ => by rw [coeff_add]; ring
 
+@[simp]
+theorem fischer_zero_right (p : MvPolynomial (Fin d) ℝ) : fischer p 0 = 0 := by
+  rw [fischer_comm, fischer_zero_left]
+
+theorem fischer_add_right (p q₁ q₂ : MvPolynomial (Fin d) ℝ) :
+    fischer p (q₁ + q₂) = fischer p q₁ + fischer p q₂ := by
+  rw [fischer_comm, fischer_add_left, fischer_comm, fischer_comm q₂]
+
 theorem fischer_C_mul_left (c : ℝ) (p q : MvPolynomial (Fin d) ℝ) :
     fischer (C c * p) q = c * fischer p q := by
   have hs : (C c * p).support ⊆ p.support := by

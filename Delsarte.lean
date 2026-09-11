@@ -12,11 +12,13 @@ import Delsarte.Certificate.Verify
 import Delsarte.Certificate.Integer
 import Delsarte.Certificate.Interval
 import Delsarte.Harmonic.Fischer
+import Delsarte.Harmonic.Zonal
 import Delsarte.Gegenbauer.Basic
 import Delsarte.Sphere.LP
 import Delsarte.Sphere.Dim2
 import Delsarte.Sphere.DegreeTwo
 import Delsarte.Sphere.DegreeThree
+import Delsarte.Sphere.Schoenberg
 import Delsarte.Certificate.Bounds
 import Delsarte.Certificate.Golay
 import Delsarte.Certificate.Parse

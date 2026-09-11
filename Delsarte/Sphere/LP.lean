@@ -133,9 +133,14 @@ end UnitPoints
 The continuous analogue of `Delsarte.Hamming.sum_sum_krawtchouk_nonneg`. Degrees
 0 and 1 are settled here, degree 2 in `Delsarte/Sphere/DegreeTwo.lean`, degree 3
 in `Delsarte/Sphere/DegreeThree.lean`, and every degree in dimension 2 in
-`Delsarte/Sphere/Dim2.lean`. Degree 4 and above is open in general dimension: it
-needs the harmonic decomposition of symmetric tensors, which mathlib does not
-have.
+`Delsarte/Sphere/Dim2.lean`.
+
+**Every degree, in every dimension `d ≥ 2`, is settled in**
+`Delsarte/Sphere/Schoenberg.lean`, by a Gram identity for the Fischer inner
+product rather than by a decomposition of the symmetric tensors. The elementary
+files above are kept: they carry witnesses — the exactness of `(d+2)/3`, an
+antipodal configuration annihilating the sum — that the general theorem does not
+give.
 -/
 
 /-- `G_k` is positive definite on the sphere of `ℝ^d`. -/
