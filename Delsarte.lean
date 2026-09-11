@@ -1,5 +1,6 @@
 import Delsarte.LP.WeakDuality
 import Delsarte.Code.Basic
+import Delsarte.Code.Linear
 import Delsarte.Krawtchouk.Basic
 import Delsarte.Krawtchouk.Subsets
 import Delsarte.Hamming.LP
@@ -33,3 +34,4 @@ import Delsarte.Certificate.Table3
 import Delsarte.Certificate.Table4
 import Delsarte.Certificate.Table5
 import Delsarte.Certificate.Table
+import Delsarte.Code.Golay

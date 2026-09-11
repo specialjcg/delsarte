@@ -40,13 +40,53 @@ certificats qui en découlent.
 | Les 240 racines de E8, séparation vérifiée | **démontré** — `Delsarte/Sphere/E8.lean` |
 | **Kissing number en dimension 8 : `= 240`** | **démontré** — `Delsarte/Sphere/E8.lean` |
 | Kissing number en dimension 24, **minoration** (Leech) | à faire |
+| Codes linéaires binaires : distance = poids, cardinal, minoration de `A` | **démontré** — `Delsarte/Code/Linear.lean` |
+| **`A(23,2,7) = 4096`** — Golay binaire `[23,12,7]` | **démontré** — `Delsarte/Code/Golay.lean` |
+| **`A(24,2,8) = 4096`** — Golay étendu `[24,12,8]` | **démontré** — `Delsarte/Code/Golay.lean` |
+| **`A(8,2,4) = 16`** — Hamming étendu `[8,4,4]` | **démontré** — `Delsarte/Code/Golay.lean` |
+| Autres minorations linéaires (`A(5,2,3)`, `A(6,2,3)`, `A(15,2,5)`…) | à faire |
 
 Sur l'alphabet binaire, la chaîne est complète de bout en bout : un vecteur de
 rationnels entre, une borne sur `A(n,2,d)` sort, et le solveur qui a produit le
 vecteur n'est nulle part dans la preuve. Trois bornes sont démontrées —
 `A(5,2,3) ≤ 4`, `A(13,2,5) ≤ 64`, `A(23,2,7) ≤ 4096` — toutes serrées, la
-dernière atteinte par le code de Golay binaire parfait. Seules les majorations
-sont établies : aucun code n'est construit, donc rien ici ne s'écrit `= 4096`.
+dernière atteinte par le code de Golay binaire parfait.
+
+La moitié constructive est là depuis `Delsarte/Code/Linear.lean` : trois
+majorations deviennent des **égalités**, `A(23,2,7) = 4096`, `A(24,2,8) = 4096`
+et `A(8,2,4) = 16`. Ce sont les premières égalités du côté combinatoire ; le
+dépôt n'écrivait jusque-là que des `≤` faute de code construit.
+
+Ce qui rend la chose abordable, c'est la linéarité. `MinDistAtLeast` quantifie
+sur les paires — 16,7 millions pour Golay, hors de portée du noyau — alors qu'un
+code linéaire ramène la distance minimale au poids minimal non nul : 4095 poids.
+Et comme pour les 240 racines de E8, l'injectivité n'est pas une hypothèse : deux
+messages de même mot donneraient un mot de poids nul, que le même calcul exclut.
+Le cardinal `2^k` sort de l'énumération, il n'est pas postulé.
+
+La représentation a été **mesurée avant d'être choisie**. Indexer les messages
+par `Fin 12 → ZMod 2` donne l'algèbre la plus propre — l'additivité y est
+`add_mul` — et meurt par saturation mémoire après 12 min 42 ; la même chose lue
+bit à bit sur un `ℕ` en arithmétique `ZMod 2` coûte 8 min 45 ; en `Bool`, 1 min
+16. C'est la troisième qui est écrite, et le prix s'en paie dans `cbit_xor`, où
+l'additivité se démontre à la main via `Nat.testBit_xor`.
+
+Les générateurs de Golay ne sont pas tabulés. Le code est cyclique, engendré par
+`g(x) = x^11 + x^10 + x^6 + x^5 + x^4 + x^2 + 1`, et les douze lignes sont ses
+décalés ; l'extension en longueur 24 ajoute un bit de parité, qui vaut 1 sur
+chaque ligne parce que `g` est de poids 7, impair. L'objet mathématique est le
+polynôme, pas la matrice.
+
+Contrôles : un seul bit retourné dans la première ligne génératrice fait tomber
+le poids minimal à 6 et le vérificateur répond `false` — avec le témoin nommé,
+le message `1` ; le code `[8,4,4]` échoue au test `d = 5`, comme il le doit ; et
+le mot nul, que l'énumération écarte par une garde explicite, est exhibé pour
+que cette garde ne reste pas muette.
+
+Trois majorations restent sans minoration pour des raisons dites au fichier :
+`A(32,2,4) ≤ 2^26` demanderait d'énumérer 67 millions de mots, `A(16,2,6) ≤ 256`
+n'est atteinte que par Nordstrom–Robinson, **non linéaire**, et les bornes à 12,
+24 ou 40 ont des optima qui ne sont pas des puissances de 2.
 
 `A(13,2,5) ≤ 64` est le cas qui justifie la machinerie : la borne de Hamming ne
 donne que 89. C'est une borne que le programme linéaire gagne et que le
