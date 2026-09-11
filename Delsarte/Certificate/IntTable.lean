@@ -84,6 +84,18 @@ theorem ent_mem : ∀ (l : List ℤ) (k : ℕ), k < l.length → ent l k ∈ l
 /-- Integer inner product of a scaled certificate with a column. -/
 def dotp (p col : List ℤ) : ℤ := (List.zipWith (· * ·) p col).sum
 
+theorem dotp_cons (a b : ℤ) (as bs : List ℤ) :
+    dotp (a :: as) (b :: bs) = a * b + dotp as bs := by
+  simp [dotp]
+
+/-- `dotp` is symmetric. Needed wherever a pairwise condition is checked on one
+side of the diagonal only. -/
+theorem dotp_comm : ∀ u v : List ℤ, dotp u v = dotp v u
+  | [], [] => rfl
+  | [], _ :: _ => by simp [dotp]
+  | _ :: _, [] => by simp [dotp]
+  | a :: as, b :: bs => by rw [dotp_cons, dotp_cons, mul_comm, dotp_comm as bs]
+
 theorem dotp_eq_sum (p col : List ℤ) (m : ℕ) (hp : p.length = m) (hc : col.length = m) :
     dotp p col = ∑ k ∈ Finset.range m, ent p k * ent col k := by
   induction p generalizing col m with

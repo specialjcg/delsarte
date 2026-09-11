@@ -36,9 +36,10 @@ certificats qui en découlent.
 | Positivité de Schoenberg en dimension quelconque, **tout degré** | **démontré** — `Delsarte/Sphere/Schoenberg.lean` |
 | Produit de Fischer, laplacien, adjonction, reproduction | **démontré** — `Delsarte/Harmonic/Fischer.lean` |
 | Polynôme zonal harmonique, tout degré | **démontré** — `Delsarte/Harmonic/Zonal.lean` |
-| Kissing number en dimension 8 : **majoration** `≤ 240` | **démontré** — `Delsarte/Sphere/Kissing.lean` |
 | Kissing number en dimension 24 : **majoration** `≤ 196560` | **démontré** — `Delsarte/Sphere/Kissing.lean` |
-| Kissing number, **minoration** (E8, Leech) | à faire |
+| Les 240 racines de E8, séparation vérifiée | **démontré** — `Delsarte/Sphere/E8.lean` |
+| **Kissing number en dimension 8 : `= 240`** | **démontré** — `Delsarte/Sphere/E8.lean` |
+| Kissing number en dimension 24, **minoration** (Leech) | à faire |
 
 Sur l'alphabet binaire, la chaîne est complète de bout en bout : un vecteur de
 rationnels entre, une borne sur `A(n,2,d)` sort, et le solveur qui a produit le
@@ -178,11 +179,30 @@ multiplicateurs, `-f = (X+1)(1/2-X)·[X(X+1/2)⋯]²`.
 Les deux quotients `(∑ f_k) / f_0` valent **exactement** 240 et 196560 — pas
 approximativement, pas avec du jeu. Cette route est donc close par le haut.
 
-**Seules les majorations sont démontrées.** Les minorations sont des
-constructions — le système de racines E8 et le réseau de Leech — et aucune n'est
-formalisée ici. Le dépôt écrit `≤ 240` et `≤ 196560`, jamais `=`. Que les vraies
-valeurs soient 240 et 196560 est un fait mathématique, pas un fait sur ce dépôt ;
-ce qui reste non exclu, c'est toute valeur inférieure à ces bornes.
+En dimension 8 la moitié constructive est là aussi, et
+`kissing_eight : IsGreatest (kissingSet 8) 240` est la **première égalité** du
+dépôt. Les 240 racines ne sont pas une table collée : elles sont définies par ce
+qu'elles sont — les 112 vecteurs `±2e_i ± 2e_j` et les 128 vecteurs à
+coordonnées `±1` et nombre pair de `-1` — dans l'échelle doublée qui garde les
+coordonnées entières et la norme carrée à 8. Ce que le noyau vérifie est
+`⟨u, v⟩ ≤ 4` hors diagonale, par `List.Pairwise` : 28 680 produits scalaires
+entiers plutôt que 57 600, une centaine de secondes. `Pairwise` porte sur les
+*positions*, donc un vecteur répété donnerait `⟨u, u⟩ = 8 > 4` et échouerait —
+la distinction des 240 points n'est pas une hypothèse, c'est une conséquence du
+même calcul.
+
+La route structurelle — intégralité du produit scalaire sur E8 et cas d'égalité
+de Cauchy–Schwarz — aurait demandé l'argument de parité sur la différence
+symétrique de deux parties paires. Le calcul est plus court et vérifie
+strictement plus : les 240 vecteurs eux-mêmes, pas un lemme sur un réseau
+abstrait qu'il faudrait encore instancier.
+
+**En dimension 24, seule la majoration est démontrée.** Le réseau de Leech n'est
+pas formalisé, et l'argument de séparation n'y donnerait de toute façon que
+`gram ≤ 3/4` : exclure `⟨u, v⟩ = 5` demande une propriété du réseau que rien ici
+ne fournit. Le dépôt écrit `≤ 196560`, jamais `=`. Que la vraie valeur soit
+196560 est un fait mathématique, pas un fait sur ce dépôt ; ce qui reste non
+exclu, c'est toute valeur inférieure à cette borne.
 
 La positivité démontrée est large, pas stricte — une paire antipodale annule la
 somme au degré 3 — et elle n'est pas une positivité terme à terme : `G_4` prend

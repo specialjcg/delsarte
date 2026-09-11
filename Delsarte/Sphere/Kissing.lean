@@ -88,6 +88,12 @@ products at most `1/2` has at most `K` members. -/
 def kissingLe (d K : ℕ) : Prop :=
   ∀ (M : ℕ) (c : UnitPoints d M), (∀ i j, i ≠ j → c.gram i j ≤ 1 / 2) → M ≤ K
 
+/-- The set of cardinalities realizable by a kissing configuration in `ℝ^d`.
+`IsGreatest (kissingSet d) K` is the honest form of "the kissing number of `ℝ^d`
+is `K`": it asserts both halves. -/
+def kissingSet (d : ℕ) : Set ℕ :=
+  {M | ∃ c : UnitPoints d M, ∀ i j, i ≠ j → c.gram i j ≤ 1 / 2}
+
 /-! ## Dimension 8 -/
 
 /-- The Gegenbauer coefficients of `(t+1)(t+1/2)² t² (t-1/2)` in dimension `8`. -/
@@ -208,6 +214,17 @@ theorem kissingLe_twentyFour : kissingLe 24 196560 := by
   rw [sum_certKiss24, show certKiss24 0 = 15 / 1490944 from rfl] at h
   norm_num at h
   exact_mod_cast h
+
+theorem kissingSet_eight_le : ∀ M ∈ kissingSet 8, M ≤ 240 := by
+  rintro M ⟨c, hc⟩
+  exact kissingLe_eight M c hc
+
+/-- In dimension 24 only this half is available: `Delsarte/Sphere/E8.lean`
+supplies the matching construction for dimension 8, and nothing here supplies
+the Leech lattice. -/
+theorem kissingSet_twentyFour_le : ∀ M ∈ kissingSet 24, M ≤ 196560 := by
+  rintro M ⟨c, hc⟩
+  exact kissingLe_twentyFour M c hc
 
 /-! ## Saturation
 

@@ -21,6 +21,7 @@ import Delsarte.Sphere.DegreeTwo
 import Delsarte.Sphere.DegreeThree
 import Delsarte.Sphere.Schoenberg
 import Delsarte.Sphere.Kissing
+import Delsarte.Sphere.E8
 import Delsarte.Certificate.Bounds
 import Delsarte.Certificate.Golay
 import Delsarte.Certificate.Ternary
