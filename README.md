@@ -39,6 +39,9 @@ certificats qui en découlent.
 | Kissing number en dimension 24 : **majoration** `≤ 196560` | **démontré** — `Delsarte/Sphere/Kissing.lean` |
 | Les 240 racines de E8, séparation vérifiée | **démontré** — `Delsarte/Sphere/E8.lean` |
 | **Kissing number en dimension 8 : `= 240`** | **démontré** — `Delsarte/Sphere/E8.lean` |
+| Configurations entières génériques : norme commune, séparation, passage à la sphère | **démontré** — `Delsarte/Lattice/Basic.lean` |
+| Séparation déduite du minimum d'un réseau (`2⟨u,v⟩ ≤ N`) | **démontré** — `Delsarte/Lattice/Basic.lean` |
+| Norme minimale du réseau de Leech (`≥ 32`) | à faire |
 | Kissing number en dimension 24, **minoration** (Leech) | à faire |
 | Codes linéaires binaires : distance = poids, cardinal, minoration de `A` | **démontré** — `Delsarte/Code/Linear.lean` |
 | **`A(23,2,7) = 4096`** — Golay binaire `[23,12,7]` | **démontré** — `Delsarte/Code/Golay.lean` |
@@ -248,12 +251,39 @@ symétrique de deux parties paires. Le calcul est plus court et vérifie
 strictement plus : les 240 vecteurs eux-mêmes, pas un lemme sur un réseau
 abstrait qu'il faudrait encore instancier.
 
-**En dimension 24, seule la majoration est démontrée.** Le réseau de Leech n'est
-pas formalisé, et l'argument de séparation n'y donnerait de toute façon que
-`gram ≤ 3/4` : exclure `⟨u, v⟩ = 5` demande une propriété du réseau que rien ici
-ne fournit. Le dépôt écrit `≤ 196560`, jamais `=`. Que la vraie valeur soit
-196560 est un fait mathématique, pas un fait sur ce dépôt ; ce qui reste non
-exclu, c'est toute valeur inférieure à cette borne.
+Cette plomberie est désormais écrite une fois pour toutes dans
+`Delsarte/Lattice/Basic.lean`. Une `IntConfig n M N` est la donnée de `M`
+vecteurs entiers de longueur `n`, de norme carrée `N`, séparés par
+`2⟨u,v⟩ ≤ N` ; la division par `√N`, le passage à `EuclideanSpace` et la borne
+de Gram `≤ 1/2` en découlent génériquement, et `IntConfig.mem_kissingSet` conclut
+`M ∈ kissingSet n`. La distinction des vecteurs reste une conséquence et non une
+hypothèse : une répétition donnerait `2N ≤ N`, que `0 < N` réfute — même
+comptabilité que l'injectivité gratuite des codes linéaires. E8 est reversé dans
+cette structure (`e8Config`), et `mem_kissingSet_eight_config` redémontre
+`240 ∈ kissingSet 8` par ce second chemin. Les deux preuves ne partagent que la
+liste des racines et le `decide` qui la vérifie ; une divergence apparaîtrait sur
+240 vecteurs, pas sur 196 560.
+
+Le lemme qui rend la dimension 24 concevable tient en une ligne :
+`two_dotp_le_of_min`. Si `u` et `v` ont pour norme carrée `N` et si leur
+différence est au moins aussi longue, alors `N ≤ N - 2⟨u,v⟩ + N`, donc
+`2⟨u,v⟩ ≤ N`. Pour un réseau, `u - v` est encore un vecteur du réseau, donc
+« au moins aussi longue » n'est rien d'autre que le minimum. Une inégalité
+remplace les `M(M-1)/2` produits scalaires d'une vérification directe : 28 680
+pour E8, que le noyau décide, et 1,9·10¹⁰ pour Leech, qu'il ne décidera jamais.
+Le contrôle négatif `two_dotp_le_of_min_fails` montre que l'hypothèse porte :
+deux vecteurs de norme carrée 8 dont la différence vaut 4 échouent la
+séparation, `2·6 = 12 > 8`.
+
+**En dimension 24, seule la majoration est démontrée** — et pas faute d'un
+argument assez fin. `two_dotp_le_of_min` donne `gram ≤ 1/2` dans n'importe quelle
+échelle, et pour Leech c'est serré : l'angle minimal vaut exactement 60°, la
+différence de deux vecteurs minimaux à `gram = 1/2` étant elle-même minimale. Ce
+qui manque est l'hypothèse, pas la conclusion : que tout vecteur non nul de Leech
+ait une norme carrée au moins 32. Aucun fait de ce genre n'est démontré ici, le
+réseau n'étant pas formalisé. Le dépôt écrit `≤ 196560`, jamais `=`. Que la vraie
+valeur soit 196560 est un fait mathématique, pas un fait sur ce dépôt ; ce qui
+reste non exclu, c'est toute valeur inférieure à cette borne.
 
 La positivité démontrée est large, pas stricte — une paire antipodale annule la
 somme au degré 3 — et elle n'est pas une positivité terme à terme : `G_4` prend

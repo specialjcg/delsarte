@@ -5,6 +5,7 @@ Authors: Jean-Charles Gouleau
 -/
 import Delsarte.Sphere.Kissing
 import Delsarte.Certificate.IntTable
+import Delsarte.Lattice.Basic
 
 /-!
 # The 240 roots of `E8`, and the kissing number of `ℝ^8`
@@ -49,6 +50,16 @@ argument for the symmetric difference of two even sets. The computation is
 shorter and checks strictly more: it verifies the `240` vectors themselves, not
 a lemma about an abstract lattice that would still have to be instantiated.
 
+## The same bound twice
+
+The list, its shape and its separation are also packaged as an
+`Delsarte.Lattice.IntConfig 8 240 8`, and `mem_kissingSet_eight_config` derives
+`240 ∈ kissingSet 8` from the generic construction of
+`Delsarte/Lattice/Basic.lean` instead of the hand-written scaling below. Two
+independent paths to one statement, on `240` vectors where the brute-force check
+gives the answer to compare against. The generic one is what dimension `24` will
+use; if it were wrong, this is where it shows.
+
 ## Negative controls
 
 * `not_pairwise_odd_coset` — the vector `(1,…,1,-1)` has squared norm `8` like
@@ -60,9 +71,12 @@ a lemma about an abstract lattice that would still have to be instantiated.
   a count of distinct points.
 * `d8Roots_length` and `cosetRoots_length` — `112 + 128`. Neither family alone
   reaches `240`; `cosetRoots` alone would give `128`, well under the bound.
-* Dimension 24 is deliberately absent. Leech has `196 560` minimal vectors, and
-  the same argument there gives only `⟨u, v⟩ ≤ 6`, i.e. `gram ≤ 3/4`: excluding
-  `⟨u, v⟩ = 5` needs a property of the lattice that nothing here provides. So
+* Dimension 24 is deliberately absent, and not for want of a sharp enough
+  argument. `Lattice.two_dotp_le_of_min` gives `gram ≤ 1/2` in any scaling, and
+  for Leech that is tight: the minimal angle is exactly `60°`, the difference of
+  two minimal vectors at `gram = 1/2` being minimal itself. What is missing is
+  the hypothesis, not the conclusion — every nonzero Leech vector having squared
+  norm at least `32`. No such fact is proved anywhere in this repository, so
   `kissingSet 24` still has only an upper bound, and the README says so.
 -/
 
@@ -233,6 +247,27 @@ theorem not_mem_kissingSet_eight : (241 : ℕ) ∉ kissingSet 8 := by
   intro h
   have := kissingSet_eight_le 241 h
   norm_num at this
+
+/-! ## The same bound, through the generic construction -/
+
+/-- The roots as an `IntConfig`: `240` vectors of length `8` and squared norm `8`,
+separated at `4`. The separation is the brute-force `e8Roots_pairwise`, restated
+as `2 ⟨u, v⟩ ≤ 8`; nothing about the `E8` lattice minimum is used. -/
+def e8Config : Lattice.IntConfig 8 240 8 where
+  vecs := e8Roots
+  card := e8Roots_length
+  npos := by norm_num
+  shape := e8Roots_shape
+  sep := e8Roots_pairwise.imp (by omega)
+
+/-- `mem_kissingSet_eight` again, this time from
+`Delsarte/Lattice/Basic.lean`. The two proofs share the list of roots and the
+`decide` that checks it, and nothing else: the scaling by `√8`, the passage to
+`EuclideanSpace` and the Gram bound are re-derived generically. A divergence
+between the generic construction and the hand-written one would surface here, on
+`240` vectors, rather than in dimension `24` on `196 560`. -/
+theorem mem_kissingSet_eight_config : (240 : ℕ) ∈ kissingSet 8 :=
+  e8Config.mem_kissingSet
 
 /-! ## Negative controls -/
 
