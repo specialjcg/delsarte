@@ -36,3 +36,5 @@ import Delsarte.Certificate.Table4
 import Delsarte.Certificate.Table5
 import Delsarte.Certificate.Table
 import Delsarte.Code.Golay
+import Delsarte.Code.Octad
+import Delsarte.Lattice.Leech

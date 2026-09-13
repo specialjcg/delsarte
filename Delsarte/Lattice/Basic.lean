@@ -16,20 +16,37 @@ positions as a condition on `Fin 240`. Dimension `24` would copy them verbatim
 with `8` replaced by `24`, `240` by `196 560` and `8` by `32`. This file writes
 them once.
 
-## What a configuration is
+## Two shapes for the same data
 
-`IntConfig n M N` is `M` integer vectors of length `n`, each of squared norm
-`N`, pairwise separated by `2 ⟪u, v⟫ ≤ N`. Dividing by `√N` sends them to the
-unit sphere of `ℝ^n` and the separation to `gram ≤ 1/2`, which is exactly
-membership in `kissingSet n`. The count `M` is a field rather than
-`vecs.length`, so a user states `IntConfig 24 196560 32` and never rewrites a
+`IntFamily n M N` is the primitive: a map `Fin M → List ℤ` whose values have
+length `n` and squared norm `N`, pairwise separated by `2 ⟪u, v⟫ ≤ N`. Dividing
+by `√N` sends them to the unit sphere of `ℝ^n` and the separation to
+`gram ≤ 1/2`, which is exactly membership in `kissingSet n`. The count `M` is a
+parameter, so a user states `IntFamily 24 196560 32` and never rewrites a
 cardinality afterwards.
 
-Distinctness is not a field. A repeated vector would give `2 N ≤ N`, which
-`0 < N` refutes; `IntConfig.nodup` is therefore a consequence of the separation,
-not an extra thing to be trusted. This is the same accounting as the linear
-codes of `Delsarte/Code/Linear.lean`, where injectivity of the encoding follows
-from the minimum weight instead of being assumed.
+`IntConfig n M N` is the same data given as an explicit `List (List ℤ)`, with
+its length and its `List.Pairwise` — the shape a `decide` produces. It is a
+special case: `IntConfig.toFamily` indexes the list, and every real-analysis
+step happens once, on the family.
+
+The distinction is not cosmetic. `E8` has `240` vectors and the kernel checks
+them as a list; Leech has `196 560` of length `24`, which is `4.7` million
+integers to materialize, the profile that already cost this repository a build
+killed at `22.9 GB`. Dimension `24` will be a family, defined and never listed.
+
+Distinctness is not a field. Two equal vectors at distinct indices would give
+`2 N ≤ N`, which `0 < N` refutes; `IntFamily.vec_injective` and
+`IntConfig.nodup` are therefore consequences of the separation, not extra things
+to be trusted. Same accounting as the linear codes of
+`Delsarte/Code/Linear.lean`, where injectivity of the encoding follows from the
+minimum weight instead of being assumed.
+
+A warning for whoever builds the Leech family: that freedom runs the other way
+once the separation is what you are trying to prove. Deriving `sep` from
+`two_dotp_le_of_min` needs the difference of two vectors to be a *nonzero*
+lattice vector, so injectivity has to be established first, by hand, from the
+parametrization. It is free only when the separation is already in hand.
 
 ## Where the separation comes from
 
@@ -46,7 +63,7 @@ does decide, and `1.9 · 10¹⁰` for Leech, which it never will.
 
 ## What this file does not prove
 
-`IntConfig.sep` is a hypothesis. `two_dotp_le_of_min` reduces it to a minimum,
+The separation is a hypothesis. `two_dotp_le_of_min` reduces it to a minimum,
 but the minimum itself is a fact about a specific lattice, and no such fact is
 established here. For `E8` the minimum is bypassed entirely: `e8Config` feeds
 the brute-force `e8Roots_pairwise` into the structure, and the kernel still
@@ -112,10 +129,106 @@ theorem two_dotp_le_of_min {u v : List ℤ} {N : ℤ} (hlen : u.length = v.lengt
   rw [dotp_vsub u v hlen, hnu, hnv] at hmin
   omega
 
-/-! ## Configurations -/
+/-! ## Families -/
 
 /-- `M` integer vectors of length `n` and squared norm `N`, separated at `N / 2`.
-The separation is stated as `2 ⟪u, v⟫ ≤ N` to stay inside `ℤ`. -/
+The separation is stated as `2 ⟪u, v⟫ ≤ N` to stay inside `ℤ`. Indexed rather
+than listed, so a family of `196 560` vectors is a definition and not an object
+the kernel has to build. -/
+structure IntFamily (n M : ℕ) (N : ℤ) where
+  /-- The vectors, in the scaling where every coordinate is an integer. -/
+  vec : Fin M → List ℤ
+  /-- The squared norm is positive, which is what makes `√N` a scaling factor. -/
+  npos : 0 < N
+  /-- Every vector has `n` coordinates. -/
+  length : ∀ i, (vec i).length = n
+  /-- Every vector has squared norm `N`. -/
+  norm : ∀ i, dotp (vec i) (vec i) = N
+  /-- The separation, off the diagonal. -/
+  sep : ∀ i j, i ≠ j → 2 * dotp (vec i) (vec j) ≤ N
+
+namespace IntFamily
+
+variable {n M : ℕ} {N : ℤ}
+
+/-- Distinct indices carry distinct vectors: a repetition would give `2 N ≤ N`. -/
+theorem vec_injective (c : IntFamily n M N) : Function.Injective c.vec := by
+  intro i j hij
+  by_contra hne
+  have h := c.sep i j hne
+  rw [hij, c.norm] at h
+  have hN := c.npos
+  omega
+
+/-! ### The unit vectors -/
+
+theorem sqrt_mul_self (c : IntFamily n M N) :
+    Real.sqrt (N : ℝ) * Real.sqrt (N : ℝ) = (N : ℝ) :=
+  Real.mul_self_sqrt (by exact_mod_cast c.npos.le)
+
+theorem cast_npos (c : IntFamily n M N) : (0 : ℝ) < (N : ℝ) := by exact_mod_cast c.npos
+
+/-- The `i`-th vector, divided by `√N`. -/
+noncomputable def point (c : IntFamily n M N) (i : Fin M) : EuclideanSpace ℝ (Fin n) :=
+  WithLp.toLp 2 fun k : Fin n => (ent (c.vec i) k : ℝ) / Real.sqrt (N : ℝ)
+
+@[simp]
+theorem point_apply (c : IntFamily n M N) (i : Fin M) (k : Fin n) :
+    WithLp.ofLp (c.point i) k = (ent (c.vec i) k : ℝ) / Real.sqrt (N : ℝ) := rfl
+
+/-- The bridge from `Finset.sum` over `Fin n` to the list-level `dotp`. -/
+theorem sum_ent_mul (c : IntFamily n M N) (i j : Fin M) :
+    ∑ k : Fin n, (ent (c.vec i) k : ℝ) * (ent (c.vec j) k : ℝ)
+      = ((dotp (c.vec i) (c.vec j) : ℤ) : ℝ) := by
+  have h := dotp_eq_sum (c.vec i) (c.vec j) n (c.length i) (c.length j)
+  rw [h]
+  push_cast
+  exact Fin.sum_univ_eq_sum_range
+    (fun k => (ent (c.vec i) k : ℝ) * (ent (c.vec j) k : ℝ)) n
+
+theorem inner_point (c : IntFamily n M N) (i j : Fin M) :
+    inner ℝ (c.point i) (c.point j) = ((dotp (c.vec i) (c.vec j) : ℤ) : ℝ) / (N : ℝ) := by
+  simp only [PiLp.inner_apply, RCLike.inner_apply, conj_trivial, point_apply,
+    div_mul_div_comm]
+  rw [← Finset.sum_div, c.sqrt_mul_self, c.sum_ent_mul j i,
+    dotp_comm (c.vec j) (c.vec i)]
+
+theorem norm_point (c : IntFamily n M N) (i : Fin M) : ‖c.point i‖ = 1 := by
+  have hN := c.cast_npos
+  have h : ‖c.point i‖ ^ 2 = 1 := by
+    rw [← real_inner_self_eq_norm_sq, c.inner_point, c.norm]
+    field_simp
+  nlinarith [norm_nonneg (c.point i), h]
+
+/-- The family on the unit sphere. -/
+noncomputable def points (c : IntFamily n M N) : Sphere.UnitPoints n M where
+  pts := c.point
+  norm_pts := c.norm_point
+
+theorem gram_eq (c : IntFamily n M N) (i j : Fin M) :
+    c.points.gram i j = ((dotp (c.vec i) (c.vec j) : ℤ) : ℝ) / (N : ℝ) :=
+  c.inner_point i j
+
+/-- **The separation, on the sphere.** -/
+theorem gram_le (c : IntFamily n M N) {i j : Fin M} (hij : i ≠ j) :
+    c.points.gram i j ≤ 1 / 2 := by
+  have hN := c.cast_npos
+  have h : 2 * ((dotp (c.vec i) (c.vec j) : ℤ) : ℝ) ≤ (N : ℝ) := by
+    exact_mod_cast c.sep i j hij
+  rw [gram_eq, div_le_iff₀ hN]
+  linarith
+
+/-- **The lower bound.** `M` unit vectors of `ℝ^n`, pairwise at inner product at
+most `1/2`: a kissing configuration of size `M`. -/
+theorem mem_kissingSet (c : IntFamily n M N) : M ∈ Sphere.kissingSet n :=
+  ⟨c.points, fun _ _ hij => c.gram_le hij⟩
+
+end IntFamily
+
+/-! ## Configurations given as a list -/
+
+/-- The same data as an `IntFamily`, presented as an explicit list with its
+length and its `List.Pairwise` — the shape a `decide` produces. -/
 structure IntConfig (n M : ℕ) (N : ℤ) where
   /-- The vectors, in the scaling where every coordinate is an integer. -/
   vecs : List (List ℤ)
@@ -188,68 +301,20 @@ theorem nodup (c : IntConfig n M N) : c.vecs.Nodup := by
   have hN := c.npos
   omega
 
-/-! ### The unit vectors -/
+/-! ### As a family -/
 
-theorem sqrt_mul_self (c : IntConfig n M N) :
-    Real.sqrt (N : ℝ) * Real.sqrt (N : ℝ) = (N : ℝ) :=
-  Real.mul_self_sqrt (by exact_mod_cast c.npos.le)
+/-- A list is a family, indexed by position. Everything analytic happens on the
+family; this is the only bridge. -/
+def toFamily (c : IntConfig n M N) : IntFamily n M N where
+  vec := c.vec
+  npos := c.npos
+  length := c.vec_length
+  norm := c.dotp_self
+  sep := fun _ _ hij => c.dotp_le hij
 
-theorem cast_npos (c : IntConfig n M N) : (0 : ℝ) < (N : ℝ) := by exact_mod_cast c.npos
-
-/-- The `i`-th vector, divided by `√N`. -/
-noncomputable def point (c : IntConfig n M N) (i : Fin M) : EuclideanSpace ℝ (Fin n) :=
-  WithLp.toLp 2 fun k : Fin n => (ent (c.vec i) k : ℝ) / Real.sqrt (N : ℝ)
-
-@[simp]
-theorem point_apply (c : IntConfig n M N) (i : Fin M) (k : Fin n) :
-    WithLp.ofLp (c.point i) k = (ent (c.vec i) k : ℝ) / Real.sqrt (N : ℝ) := rfl
-
-/-- The bridge from `Finset.sum` over `Fin n` to the list-level `dotp`. -/
-theorem sum_ent_mul (c : IntConfig n M N) (i j : Fin M) :
-    ∑ k : Fin n, (ent (c.vec i) k : ℝ) * (ent (c.vec j) k : ℝ)
-      = ((dotp (c.vec i) (c.vec j) : ℤ) : ℝ) := by
-  have h := dotp_eq_sum (c.vec i) (c.vec j) n (c.vec_length i) (c.vec_length j)
-  rw [h]
-  push_cast
-  exact Fin.sum_univ_eq_sum_range
-    (fun k => (ent (c.vec i) k : ℝ) * (ent (c.vec j) k : ℝ)) n
-
-theorem inner_point (c : IntConfig n M N) (i j : Fin M) :
-    inner ℝ (c.point i) (c.point j) = ((dotp (c.vec i) (c.vec j) : ℤ) : ℝ) / (N : ℝ) := by
-  simp only [PiLp.inner_apply, RCLike.inner_apply, conj_trivial, point_apply,
-    div_mul_div_comm]
-  rw [← Finset.sum_div, c.sqrt_mul_self, c.sum_ent_mul j i,
-    dotp_comm (c.vec j) (c.vec i)]
-
-theorem norm_point (c : IntConfig n M N) (i : Fin M) : ‖c.point i‖ = 1 := by
-  have hN := c.cast_npos
-  have h : ‖c.point i‖ ^ 2 = 1 := by
-    rw [← real_inner_self_eq_norm_sq, c.inner_point, c.dotp_self]
-    field_simp
-  nlinarith [norm_nonneg (c.point i), h]
-
-/-- The configuration on the unit sphere. -/
-noncomputable def points (c : IntConfig n M N) : Sphere.UnitPoints n M where
-  pts := c.point
-  norm_pts := c.norm_point
-
-theorem gram_eq (c : IntConfig n M N) (i j : Fin M) :
-    c.points.gram i j = ((dotp (c.vec i) (c.vec j) : ℤ) : ℝ) / (N : ℝ) :=
-  c.inner_point i j
-
-/-- **The separation, on the sphere.** -/
-theorem gram_le (c : IntConfig n M N) {i j : Fin M} (hij : i ≠ j) :
-    c.points.gram i j ≤ 1 / 2 := by
-  have hN := c.cast_npos
-  have h : 2 * ((dotp (c.vec i) (c.vec j) : ℤ) : ℝ) ≤ (N : ℝ) := by
-    exact_mod_cast c.dotp_le hij
-  rw [gram_eq, div_le_iff₀ hN]
-  linarith
-
-/-- **The lower bound.** `M` unit vectors of `ℝ^n`, pairwise at inner product at
-most `1/2`: a kissing configuration of size `M`. -/
+/-- **The lower bound**, for a configuration given as a list. -/
 theorem mem_kissingSet (c : IntConfig n M N) : M ∈ Sphere.kissingSet n :=
-  ⟨c.points, fun _ _ hij => c.gram_le hij⟩
+  c.toFamily.mem_kissingSet
 
 end IntConfig
 

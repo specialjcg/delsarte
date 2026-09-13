@@ -41,6 +41,9 @@ certificats qui en découlent.
 | **Kissing number en dimension 8 : `= 240`** | **démontré** — `Delsarte/Sphere/E8.lean` |
 | Configurations entières génériques : norme commune, séparation, passage à la sphère | **démontré** — `Delsarte/Lattice/Basic.lean` |
 | Séparation déduite du minimum d'un réseau (`2⟨u,v⟩ ≤ N`) | **démontré** — `Delsarte/Lattice/Basic.lean` |
+| **Les 759 octades du Golay étendu**, comptées par le noyau | **démontré** — `Delsarte/Code/Octad.lean` |
+| **Les 196 560 vecteurs minimaux de Leech** : norme 32, deux à deux distincts | **démontré** — `Delsarte/Lattice/Leech.lean` |
+| Kissing number en dimension 24, minoration **conditionnelle au minimum** | **démontré** — `Delsarte/Lattice/Leech.lean` |
 | Norme minimale du réseau de Leech (`≥ 32`) | à faire |
 | Kissing number en dimension 24, **minoration** (Leech) | à faire |
 | Codes linéaires binaires : distance = poids, cardinal, minoration de `A` | **démontré** — `Delsarte/Code/Linear.lean` |
@@ -274,6 +277,49 @@ pour E8, que le noyau décide, et 1,9·10¹⁰ pour Leech, qu'il ne décidera ja
 Le contrôle négatif `two_dotp_le_of_min_fails` montre que l'hypothèse porte :
 deux vecteurs de norme carrée 8 dont la différence vaut 4 échouent la
 séparation, `2·6 = 12 > 8`.
+
+Les 196 560 vecteurs minimaux de Leech sont maintenant construits, dans
+`Delsarte/Lattice/Leech.lean`. Trois familles : 1104 vecteurs `(±4, ±4, 0²²)`
+sur les 276 paires, 97 152 vecteurs `(∓2⁸, 0¹⁶)` portés par les 759 octades avec
+un nombre pair de signes moins, 98 304 vecteurs `(∓3, ±1²³)` dont les signes
+viennent d'un mot de Golay. `4·C(24,2) + 759·2⁷ + 24·2¹² = 196560`, et le 759
+est `octadMsgs_length`, compté par le noyau sur les 4096 mots de `golay24Row` —
+le code dont la distance minimale 8 est déjà démontrée. Aucune table de mots de
+code n'est réintroduite ; rien ici ne peut diverger de `A(24,2,8) = 4096`.
+
+Rien n'est énuméré. `leechVec` est une fonction `ℕ → List ℤ`, aveugle au-delà de
+196 560 : matérialiser la liste, ce serait 4,7 millions d'entiers dans le noyau,
+soit le profil qui avait déjà tué une compilation à 22,9 GB. Longueurs, normes
+et nombres de coordonnées non nulles se démontrent par sommes symboliques sur
+`Finset.range 24`, pour tous les indices à la fois.
+
+L'injectivité, elle, redevient du travail. Dans une `IntConfig`, une répétition
+était réfutée par la séparation elle-même ; ici la séparation est justement ce
+qu'on cherche, et déduire `2⟨u,v⟩ ≤ N` du minimum exige que `u − v` soit un
+vecteur **non nul** du réseau. `leechVec_injOn` est donc démontré à la main : les
+familles se distinguent par leur nombre de coordonnées non nulles — 2, 8 et 24 —
+et dans chaque famille la paramétrisation se relit dans le vecteur. Le point
+délicat est la deuxième : son motif de signes est indexé par le *rang* dans le
+support, donc le relire demande que le r-ième élément du support ait exactement
+r prédécesseurs — c'est `countP_range_getD`, démontré une fois, génériquement,
+par récurrence sur l'intervalle.
+
+Les contrôles négatifs sont mesurés avant d'être écrits. `patSign_even` vérifie
+sur les 128 motifs que le huitième signe est bien la parité des sept premiers ;
+`exists_odd_raw` montre que les motifs bruts, eux, ne sont pas tous pairs.
+Surtout, `ctrlOdd` est un vecteur porté par une octade avec un nombre **impair**
+de signes moins : sa norme carrée vaut 32, exactement comme un vrai vecteur
+minimal, et pourtant `ctrlOdd_dotp` le place à produit scalaire 24 d'un membre
+authentique de la famille — bien au-delà du 16 qu'autorise `gram ≤ 1/2`. Mesuré
+contre la famille entière, il dépasse 16 sur 264 vecteurs. La condition de
+parité porte ; la norme seule n'exclut rien. C'est le pendant exact de
+`not_pairwise_odd_coset` en dimension 8.
+
+Ce qui reste est nommé précisément. `mem_kissingSet_twentyFour_of_min` donne
+`196560 ∈ kissingSet 24` **sous hypothèse** que la différence de deux vecteurs
+minimaux distincts soit au moins aussi longue — c'est-à-dire sous le minimum du
+réseau de Leech. Ce n'est pas une démonstration du kissing number : c'est
+l'énoncé exact de ce qu'il reste à démontrer.
 
 **En dimension 24, seule la majoration est démontrée** — et pas faute d'un
 argument assez fin. `two_dotp_le_of_min` donne `gram ≤ 1/2` dans n'importe quelle
