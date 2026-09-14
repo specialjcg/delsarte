@@ -171,6 +171,63 @@ def report(n, d, q=2):
     return y, bound
 
 
+
+def emit_lean_lt(n, d, q=2):
+    """Print the Lean declarations for one certificate, rounded down.
+
+    Same as `emit_lean`, but the bound check is strict: `bound < B + 1` with
+    `B = floor(bound)`.  That is what `A_le_of_intCertLt` needs, and it removes
+    `emit_lean`'s requirement that the linear program's optimum be an integer.
+    The extra step is the integrality of `A n q d`, not linear programming.
+    """
+    K, dists, opt, x, y = solve(n, d, q)
+    ok, bound, slacks = check(n, d, K, y, q)
+    assert ok, "the candidate failed its own re-verification"
+    B = bound.__floor__()
+    name = f"cert{n}_{d}"
+    den = lcm(*[v.denominator for v in y])
+    p = [0] + [int(v * den) for v in y]
+    assert all(v >= 0 for v in p), "a scaled coefficient came out negative"
+    for i in range(d, n + 1):
+        slack = -sum(p[k] * K[k][i] for k in range(n + 1))
+        assert den <= slack, f"the scaled certificate fails at distance {i}"
+    lhs = den + sum(p[k] * K[k][0] for k in range(n + 1))
+    assert lhs < (B + 1) * den, "the scaled certificate misses its own floor"
+    rats = ", ".join(f"`y {k} = {y[k-1]}`" for k in range(1, n + 1) if y[k - 1] != 0)
+    lines = []
+    lines.append(f"/-- Certificate for `n = {n}`, `d = {d}`, scaled by its common denominator")
+    lines.append(f"`{den}`. Index `0` is unused. Linear-programming optimum `{bound}`. -/")
+    lines.append(f"def {name}Int : List ℤ :=")
+    lines.append("  " + wrap_ints(p))
+    lines.append("")
+    lines.append(f"/-- The common denominator of `{name}`. -/")
+    lines.append(f"def {name}Den : ℤ := {den}")
+    lines.append("")
+    lines.extend(wrap_doc(f"The same certificate as rationals: {rats}. Derived from the "
+                          "integer form, so the two cannot drift apart."))
+    lines.append(f"def {name} : ℕ → ℚ := ratOfInt {name}Int {name}Den")
+    lines.append("")
+    lines.append(f"-- {n - d + 1} dual constraints, each a sum of {n} integer products")
+    check_line = f"theorem intCheck_{name} : intCheck {n} {d} {name}Int {name}Den = true := by decide"
+    if len(check_line) <= 100:
+        lines.append(check_line)
+    else:
+        lines.append(check_line[: -len(" decide")])
+        lines.append("  decide")
+    lines.append("")
+    lines.append(f"theorem dualCert_{name} : DualCert {n} 2 {d} {name} :=")
+    lines.append(f"  dualCert_of_intCheck intCheck_{name}")
+    lines.append("")
+    lines.append(f"theorem A_{n}_{q}_{d}_le : A {n} {q} {d} ≤ {B} :=")
+    lines.append(f"  A_le_of_intCertLt (p := {name}Int) (D := {name}Den) (by norm_num) "
+                 f"intCheck_{name}")
+    lines.append("    (by decide)")
+    lines.append("")
+    lines.append(f"#guard dualCheck {n} {q} {d} {name}")
+    lines.append(f"#guard bound {n} {q} {name} == {bound}")
+    print("\n".join(lines))
+    print()
+
 if __name__ == "__main__":
     if len(sys.argv) >= 3:
         # usage: delsarte_lp.py n d [q]   (q defaults to 2)

@@ -1,6 +1,7 @@
 import Delsarte.LP.WeakDuality
 import Delsarte.Code.Basic
 import Delsarte.Code.Linear
+import Delsarte.Code.Shorten
 import Delsarte.Krawtchouk.Basic
 import Delsarte.Krawtchouk.Subsets
 import Delsarte.Hamming.LP
@@ -12,6 +13,7 @@ import Delsarte.Hamming.FeasibleQ
 import Delsarte.Certificate.IntTable
 import Delsarte.Certificate.Verify
 import Delsarte.Certificate.Integer
+import Delsarte.Certificate.Floor
 import Delsarte.Certificate.Interval
 import Delsarte.Harmonic.Fischer
 import Delsarte.Harmonic.Zonal
@@ -34,6 +36,7 @@ import Delsarte.Certificate.Table2
 import Delsarte.Certificate.Table3
 import Delsarte.Certificate.Table4
 import Delsarte.Certificate.Table5
+import Delsarte.Certificate.Table6
 import Delsarte.Certificate.Table
 import Delsarte.Code.Golay
 import Delsarte.Code.Octad

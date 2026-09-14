@@ -3,6 +3,102 @@
 Formalisation en **Lean 4** du socle du programme linéaire de Delsarte, et des
 certificats qui en découlent.
 
+## But
+
+Ce dépôt ne vise pas à redémontrer des résultats acquis. Le kissing number en
+dimensions 8 et 24 — `240` et `196 560`, établis en 1979 par Odlyzko–Sloane et
+Levenshtein — est un **test de charge** du socle, pas la destination. Personne
+n'attend cette preuve.
+
+La cible est le côté *packing* du schéma de Hamming : les entrées **ouvertes**
+de la table `A(n,d)`, dont la meilleure borne supérieure connue repose souvent
+sur des calculs flottants jamais rejoués. La dualité faible formalisée rend ces
+bornes **auditables sans refaire le calcul** : tout vecteur dual réalisable,
+même non optimal, donne une borne valide, et la vérifier se réduit à des
+produits scalaires rationnels exacts.
+
+C'est le créneau que les trois formalisations de 2026 laissent vide — flag
+algebras sur graphes simples, codes couvrants q-aires, `K₈(4,2)` : aucune ne
+touche au LP de Delsarte ni à `A(n,d)`.
+
+### Ce que le LP nu donne sur les entrées ouvertes
+
+Mesuré avant d'être annoncé, par `tools/delsarte_lp.py` — simplexe exact en
+`Fraction`, dual re-vérifié à chaque ligne. La colonne « connue » vient de la
+table de Brouwer, recoupée contre quatre ancres déjà certifiées ici
+(`A(8,4)=16`, `A(12,6)=24`, `A(15,6)=128`, `A(24,8)=4096`) : une première
+extraction décalée d'une colonne a été rejetée par ce contrôle.
+
+| n | d | LP de Delsarte | meilleure connue | écart |
+|---|---|---|---|---|
+| 18 | 4 | 6 553 | 5 632 – **6 552** | **+1** |
+| 19 | 4 | 13 107 | 10 496 – **13 104** | +3 |
+| 26 | 4 | 1 198 372 | … – **1 198 368** | +4 |
+| 27 | 4 | 2 396 745 | … – **2 396 736** | +9 |
+| 24 | 6 | 24 107 | 16 384 – **24 106** | **+1** |
+| 28 | 6 | 291 271 | 131 072 – **291 269** | +2 |
+| 23 | 10 | 151 | 80 – **150** | **+1** |
+| **28** | **12** | **288** | 178 – **288** | **0** |
+
+Verdict : **le LP nu ne bat le connu nulle part.** C'était l'issue attendue —
+les bornes de table viennent d'un LP *renforcé*, pas du LP brut. Deux faits
+exploitables en sortent.
+
+1. `A(28,12) ≤ 288` est la seule entrée ouverte où le LP brut atteint la
+   meilleure borne connue.
+2. La récurrence `A(n,d) ≤ 2·A(n−1,d)` — partition du code selon un bit fixé,
+   raccourcissement — se démontre en Lean et se compose avec les certificats.
+
+### Ce que la composition donne, et ce qu'elle ne donne pas
+
+Une version antérieure de ce paragraphe affirmait que la récurrence « explique »
+les valeurs de table, au motif que `2 × 3 276 = 6 552`, `2 × 599 184 = 1 198 368`
+et deux autres produits tombent juste. Le calcul est exact et la conclusion
+fausse : ces produits partent des bornes *de la table*, meilleures que celles du
+LP nu. Partant des bornes certifiées ici, la composition gagne une à deux unités
+sur le LP seul, et reste au-dessus de la littérature.
+
+| entrée | LP seul | composé | meilleure connue |
+|---|---|---|---|
+| `A(19,4)` | 13 107 | **13 106** | 13 104 |
+| `A(20,4)` | 26 214 | **26 212** | 26 168 |
+| `A(24,4)` | 349 525 | **349 524** | 344 308 |
+| `A(27,4)` | 2 396 745 | **2 396 744** | 2 396 736 |
+| `A(28,4)` | 4 793 490 | **4 793 488** | 4 792 950 |
+
+Gain d'un à deux mots de code. Il est conservé parce qu'il est *gagné* : deux
+étapes certifiées, aucune dépendance au flottant d'un solveur.
+
+### Acquis
+
+`Delsarte/Certificate/Table6.lean` — neuf bornes sur des lignes où la
+littérature donne encore un intervalle. **Aucune n'améliore la littérature** :
+huit sont plus faibles, d'une unité à cinq cents. `A(28,2,12) ≤ 288` égale la
+meilleure borne supérieure connue d'une entrée ouverte — minorant 178 — et c'est
+la seule ligne où ce dépôt en dit autant que la littérature sur une entrée non
+résolue.
+
+Le pas manquant n'était pas le LP. L'optimum en `n = 18`, `d = 4` vaut
+`32768/5 = 6553,6`, et aucun vecteur dual n'atteint `6553` : c'est
+l'**intégralité de `A`** qui conclut. `Delsarte/Certificate/Floor.lean` ajoute la
+vérification stricte `borne < B + 1` qui en tient lieu.
+
+Trois contrôles négatifs, décidés par le même noyau : la vérification refuse
+`287` pour `A(28,12)`, refuse `6552` pour `A(18,4)`, et rejette un certificat
+trafiqué dont le premier coefficient passe de `4389` à `4000`.
+
+### Ce qui n'est pas promis
+
+Fermer une entrée ouverte est improbable : `A(17,6) ∈ [258, 340]` résiste depuis
+des décennies, et bien des gens ont essayé. Le résultat réaliste est
+l'**auditabilité** d'une borne existante, pas une découverte. Il peut être nul,
+et l'étape de mesure ci-dessus est précisément là pour le dire tôt.
+
+Le renforcement SDP de Schrijver (algèbre de Terwilliger), qui bat Delsarte sur
+beaucoup d'entrées, n'est pas pris : il demande une positivité semi-définie
+exacte sur ℚ, hors de la machinerie actuelle. Nommé ici parce qu'il explique une
+partie de l'écart mesuré.
+
 ## État actuel
 
 | Composant | État |
@@ -45,6 +141,11 @@ certificats qui en découlent.
 | **Les 196 560 vecteurs minimaux de Leech** : norme 32, deux à deux distincts | **démontré** — `Delsarte/Lattice/Leech.lean` |
 | Kissing number en dimension 24, minoration **conditionnelle au minimum** | **démontré** — `Delsarte/Lattice/Leech.lean` |
 | Norme minimale du réseau de Leech (`≥ 32`) | à faire |
+| Raccourcissement : `A(n+1,q,d) ≤ q · A(n,q,d)` | **démontré** — `Delsarte/Code/Shorten.lean` |
+| Borne arrondie vers le bas (intégralité de `A`) | **démontré** — `Delsarte/Certificate/Floor.lean` |
+| **`A(28,2,12) ≤ 288`** — entrée ouverte, égale la meilleure borne connue | **démontré** — `Delsarte/Certificate/Table6.lean` |
+| Huit autres entrées ouvertes, bornes plus faibles que la littérature | **démontré** — `Delsarte/Certificate/Table6.lean` |
+| Contrôles négatifs sur les entrées ouvertes (trois refus) | **démontré** — `Delsarte/Certificate/Table6.lean` |
 | Kissing number en dimension 24, **minoration** (Leech) | à faire |
 | Codes linéaires binaires : distance = poids, cardinal, minoration de `A` | **démontré** — `Delsarte/Code/Linear.lean` |
 | **`A(23,2,7) = 4096`** — Golay binaire `[23,12,7]` | **démontré** — `Delsarte/Code/Golay.lean` |
