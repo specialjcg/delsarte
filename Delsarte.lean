@@ -41,3 +41,4 @@ import Delsarte.Certificate.Table
 import Delsarte.Code.Golay
 import Delsarte.Code.Octad
 import Delsarte.Lattice.Leech
+import Delsarte.Lattice.Separation
