@@ -139,14 +139,15 @@ partie de l'écart mesuré.
 | Séparation déduite du minimum d'un réseau (`2⟨u,v⟩ ≤ N`) | **démontré** — `Delsarte/Lattice/Basic.lean` |
 | **Les 759 octades du Golay étendu**, comptées par le noyau | **démontré** — `Delsarte/Code/Octad.lean` |
 | **Les 196 560 vecteurs minimaux de Leech** : norme 32, deux à deux distincts | **démontré** — `Delsarte/Lattice/Leech.lean` |
-| Kissing number en dimension 24, minoration **conditionnelle au minimum** | **démontré** — `Delsarte/Lattice/Leech.lean` |
-| Norme minimale du réseau de Leech (`≥ 32`) | à faire |
+| **Séparation des 196 560 vecteurs**, les six paires de familles | **démontré** — `Delsarte/Lattice/Separation.lean` |
+| Norme minimale du réseau de Leech (`≥ 32`) — **non requise** par ce qui précède | à faire |
 | Raccourcissement : `A(n+1,q,d) ≤ q · A(n,q,d)` | **démontré** — `Delsarte/Code/Shorten.lean` |
 | Borne arrondie vers le bas (intégralité de `A`) | **démontré** — `Delsarte/Certificate/Floor.lean` |
 | **`A(28,2,12) ≤ 288`** — entrée ouverte, égale la meilleure borne connue | **démontré** — `Delsarte/Certificate/Table6.lean` |
 | Huit autres entrées ouvertes, bornes plus faibles que la littérature | **démontré** — `Delsarte/Certificate/Table6.lean` |
 | Contrôles négatifs sur les entrées ouvertes (trois refus) | **démontré** — `Delsarte/Certificate/Table6.lean` |
-| Kissing number en dimension 24, **minoration** (Leech) | à faire |
+| **Kissing number en dimension 24 : `= 196560`** | **démontré** — `Delsarte/Lattice/Separation.lean` |
+| Poids du Golay étendu tous multiples de 4, octades d'intersection paire | **démontré** — `Delsarte/Code/Golay.lean` |
 | Codes linéaires binaires : distance = poids, cardinal, minoration de `A` | **démontré** — `Delsarte/Code/Linear.lean` |
 | **`A(23,2,7) = 4096`** — Golay binaire `[23,12,7]` | **démontré** — `Delsarte/Code/Golay.lean` |
 | **`A(24,2,8) = 4096`** — Golay étendu `[24,12,8]` | **démontré** — `Delsarte/Code/Golay.lean` |
@@ -416,21 +417,33 @@ contre la famille entière, il dépasse 16 sur 264 vecteurs. La condition de
 parité porte ; la norme seule n'exclut rien. C'est le pendant exact de
 `not_pairwise_odd_coset` en dimension 8.
 
-Ce qui reste est nommé précisément. `mem_kissingSet_twentyFour_of_min` donne
-`196560 ∈ kissingSet 24` **sous hypothèse** que la différence de deux vecteurs
-minimaux distincts soit au moins aussi longue — c'est-à-dire sous le minimum du
-réseau de Leech. Ce n'est pas une démonstration du kissing number : c'est
-l'énoncé exact de ce qu'il reste à démontrer.
+L'hypothèse de `mem_kissingSet_twentyFour_of_min` n'était pas le minimum du
+réseau de Leech : c'était l'énoncé **fini** que les 196 560 vecteurs explicites
+sont deux à deux à distance carrée au moins 32. Comme chacun a norme carrée 32,
+elle se réduit à `⟨u, v⟩ ≤ 16` pour `u ≠ v`.
+`Delsarte/Lattice/Separation.lean` la démontre, les six paires de familles une
+par une. Trois ne coûtent que la taille des entrées ; deux reposent sur
+`minWt_golay24` ; la sixième, octade contre `(∓3, ±1^23)`, exige en plus que
+tous les poids du Golay étendu soient multiples de 4 — sans quoi le compte
+naïf atteint 20. `mem_kissingSet_twentyFour` est sans hypothèse, et
+`kissing_twentyFour` donne `IsGreatest (kissingSet 24) 196560`.
 
-**En dimension 24, seule la majoration est démontrée** — et pas faute d'un
-argument assez fin. `two_dotp_le_of_min` donne `gram ≤ 1/2` dans n'importe quelle
-échelle, et pour Leech c'est serré : l'angle minimal vaut exactement 60°, la
-différence de deux vecteurs minimaux à `gram = 1/2` étant elle-même minimale. Ce
-qui manque est l'hypothèse, pas la conclusion : que tout vecteur non nul de Leech
-ait une norme carrée au moins 32. Aucun fait de ce genre n'est démontré ici, le
-réseau n'étant pas formalisé. Le dépôt écrit `≤ 196560`, jamais `=`. Que la vraie
-valeur soit 196560 est un fait mathématique, pas un fait sur ce dépôt ; ce qui
-reste non exclu, c'est toute valeur inférieure à cette borne.
+**En dimension 24 les deux bornes sont donc démontrées.** La majoration est le
+programme linéaire d'Odlyzko-Sloane de `Delsarte/Sphere/Kissing.lean`, la
+minoration est la configuration de Leech ci-dessus ; ni l'une ni l'autre n'est
+conditionnelle. La borne est serrée des deux côtés : `two_dotp_le_of_min` donne
+`gram ≤ 1/2` dans n'importe quelle échelle, et pour Leech l'angle minimal vaut
+exactement 60°, ce que confirment les six témoins de saturation du fichier —
+`16` est atteint sur chacune des six paires de familles, donc la constante ne
+peut pas être abaissée.
+
+Ce qui **n'est pas** démontré ici, et que rien de ce qui précède ne requiert :
+le minimum du réseau de Leech lui-même, c'est-à-dire que *tout* vecteur non nul
+du réseau ait une norme carrée au moins 32. Le réseau n'est pas formalisé ;
+seule la liste des 196 560 vecteurs l'est, et la séparation est établie sur
+cette liste, pas sur le réseau. Que ces 196 560 vecteurs soient bien tous les
+vecteurs minimaux de Leech n'est pas démontré non plus — inutile ici, puisque
+`kissingSet` ne demande qu'une configuration, pas la configuration maximale.
 
 La positivité démontrée est large, pas stricte — une paire antipodale annule la
 somme au degré 3 — et elle n'est pas une positivité terme à terme : `G_4` prend

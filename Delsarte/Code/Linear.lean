@@ -262,4 +262,47 @@ theorem two_pow_le_A {row : ℕ → ℕ → Bool} {k n d : ℕ} (hd : 0 < d) (hw
   have := card_le_A (minDistAtLeast_linCode hw)
   rwa [card_linCode hd hw] at this
 
+/-! ### Support overlaps, and weights modulo a fixed number
+
+`cbit_xor` says the encoding is additive. Counting where two codewords are both
+set turns that into inclusion-exclusion, and inclusion-exclusion turns a
+divisibility statement about weights into a parity statement about overlaps.
+The Leech separation needs the second form, not the first.
+-/
+
+/-- How many coordinates carry a one in both codewords. -/
+def cinter (row : ℕ → ℕ → Bool) (k n a b : ℕ) : ℕ :=
+  (List.range n).countP fun j => cbit row k a j && cbit row k b j
+
+/-- **Inclusion-exclusion on supports.** Read through `cbit_xor`, so the third
+weight really is the weight of a codeword and not of an ambient sum. -/
+theorem cwt_add_cwt (row : ℕ → ℕ → Bool) (k n a b : ℕ) :
+    cwt row k n a + cwt row k n b = cwt row k n (a ^^^ b) + 2 * cinter row k n a b := by
+  simp only [cwt, cinter, countP_range_eq_sum]
+  rw [← Finset.sum_add_distrib, Finset.mul_sum, ← Finset.sum_add_distrib]
+  refine Finset.sum_congr rfl fun j _ => ?_
+  rw [cbit_xor]
+  cases cbit row k a j <;> cases cbit row k b j <;> simp
+
+/-- Every weight divisible by four forces every overlap even. -/
+theorem cinter_even {row : ℕ → ℕ → Bool} {k n a b : ℕ}
+    (ha : cwt row k n a % 4 = 0) (hb : cwt row k n b % 4 = 0)
+    (hab : cwt row k n (a ^^^ b) % 4 = 0) : cinter row k n a b % 2 = 0 := by
+  have h := cwt_add_cwt row k n a b
+  omega
+
+/-- What the kernel runs for a divisibility claim, one block of messages at a
+time. Same reason for the split as `minWtCheckFrom`: a fresh cache per
+declaration keeps the peak memory an eighth of what one pass would take. -/
+def wtDvdCheckFrom (row : ℕ → ℕ → Bool) (k n r lo len : ℕ) : Bool :=
+  (List.range' lo len).all fun m => cwt row k n m % r == 0
+
+/-- One block of the divisibility check, read back as a statement. -/
+theorem wtDvdFrom_of_check {row : ℕ → ℕ → Bool} {k n r lo len : ℕ}
+    (h : wtDvdCheckFrom row k n r lo len = true) :
+    ∀ m, lo ≤ m → m < lo + len → cwt row k n m % r = 0 := by
+  intro m h1 h2
+  have hall := List.all_eq_true.mp h m (List.mem_range'_1.mpr ⟨h1, h2⟩)
+  simpa using hall
+
 end Delsarte

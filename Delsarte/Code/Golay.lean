@@ -289,4 +289,87 @@ which would defeat every positive `d`. Excluding it is the one step of the
 enumeration that is not a computation, so it is stated. -/
 theorem cwt_golay_zero : cwt golayRow 12 23 0 = 0 := by decide +kernel
 
+/-! ## Every Golay weight is a multiple of four
+
+The extended binary Golay code is *doubly even*: the weight enumerator is
+`1 + 759 x^8 + 2576 x^12 + 759 x^16 + x^24`, so no weight escapes `4 ℕ`. The
+fact is textbook, the check here is not: it is the same enumeration over the
+4096 messages that `minWt_golay24` runs, split the same way and for the same
+reason.
+
+What it buys, through `cinter_even`, is that any two Golay codewords meet in an
+even number of coordinates. That parity is what separates the second and third
+Leech families in `Delsarte/Lattice/Separation.lean`; the minimum distance
+alone leaves a gap there.
+-/
+
+set_option maxHeartbeats 2000000 in
+-- One slice of the enumeration: 512 codewords, far past the default budget.
+theorem golay24Dvd0 : wtDvdCheckFrom golay24Row 12 24 4 0 512 = true := by decide +kernel
+
+set_option maxHeartbeats 2000000 in
+-- One slice of the enumeration: 512 codewords, far past the default budget.
+theorem golay24Dvd1 : wtDvdCheckFrom golay24Row 12 24 4 512 512 = true := by decide +kernel
+
+set_option maxHeartbeats 2000000 in
+-- One slice of the enumeration: 512 codewords, far past the default budget.
+theorem golay24Dvd2 : wtDvdCheckFrom golay24Row 12 24 4 1024 512 = true := by decide +kernel
+
+set_option maxHeartbeats 2000000 in
+-- One slice of the enumeration: 512 codewords, far past the default budget.
+theorem golay24Dvd3 : wtDvdCheckFrom golay24Row 12 24 4 1536 512 = true := by decide +kernel
+
+set_option maxHeartbeats 2000000 in
+-- One slice of the enumeration: 512 codewords, far past the default budget.
+theorem golay24Dvd4 : wtDvdCheckFrom golay24Row 12 24 4 2048 512 = true := by decide +kernel
+
+set_option maxHeartbeats 2000000 in
+-- One slice of the enumeration: 512 codewords, far past the default budget.
+theorem golay24Dvd5 : wtDvdCheckFrom golay24Row 12 24 4 2560 512 = true := by decide +kernel
+
+set_option maxHeartbeats 2000000 in
+-- One slice of the enumeration: 512 codewords, far past the default budget.
+theorem golay24Dvd6 : wtDvdCheckFrom golay24Row 12 24 4 3072 512 = true := by decide +kernel
+
+set_option maxHeartbeats 2000000 in
+-- One slice of the enumeration: 512 codewords, far past the default budget.
+theorem golay24Dvd7 : wtDvdCheckFrom golay24Row 12 24 4 3584 512 = true := by decide +kernel
+
+/-- The eight blocks, reassembled. -/
+theorem wtDvd_golay24 : ∀ m < 4096, cwt golay24Row 12 24 m % 4 = 0 := by
+  intro m hm
+  rcases lt_or_ge m 512 with h0 | h0
+  · exact wtDvdFrom_of_check golay24Dvd0 m (Nat.zero_le _) (by omega)
+  rcases lt_or_ge m 1024 with h1 | h1
+  · exact wtDvdFrom_of_check golay24Dvd1 m h0 (by omega)
+  rcases lt_or_ge m 1536 with h2 | h2
+  · exact wtDvdFrom_of_check golay24Dvd2 m h1 (by omega)
+  rcases lt_or_ge m 2048 with h3 | h3
+  · exact wtDvdFrom_of_check golay24Dvd3 m h2 (by omega)
+  rcases lt_or_ge m 2560 with h4 | h4
+  · exact wtDvdFrom_of_check golay24Dvd4 m h3 (by omega)
+  rcases lt_or_ge m 3072 with h5 | h5
+  · exact wtDvdFrom_of_check golay24Dvd5 m h4 (by omega)
+  rcases lt_or_ge m 3584 with h6 | h6
+  · exact wtDvdFrom_of_check golay24Dvd6 m h5 (by omega)
+  exact wtDvdFrom_of_check golay24Dvd7 m h6 (by omega)
+
+/-- Two Golay codewords meet in an even number of coordinates. -/
+theorem cinter_golay24_even {a b : ℕ} (ha : a < 4096) (hb : b < 4096) :
+    cinter golay24Row 12 24 a b % 2 = 0 := by
+  have h12 : (2 : ℕ) ^ 12 = 4096 := by norm_num
+  have ha' : a < 2 ^ 12 := by rw [h12]; exact ha
+  have hb' : b < 2 ^ 12 := by rw [h12]; exact hb
+  have hx : a ^^^ b < 4096 := by rw [← h12]; exact xor_lt_two_pow ha' hb'
+  exact cinter_even (wtDvd_golay24 a ha) (wtDvd_golay24 b hb) (wtDvd_golay24 _ hx)
+
+/-! ### Negative control
+
+Double evenness is a property of the *extended* code, not of the Golay code it
+extends. The 23-coordinate version has codewords of weight 7, so the very same
+check fails on its first block. A check that passes everywhere it is pointed
+proves nothing. -/
+theorem not_wtDvdCheck_golay23 : wtDvdCheckFrom golayRow 12 23 4 0 512 = false := by
+  decide +kernel
+
 end Delsarte
