@@ -108,9 +108,9 @@ l'**auditabilité** d'une borne existante, pas une découverte. Il peut être nu
 et l'étape de mesure ci-dessus est précisément là pour le dire tôt.
 
 Le renforcement SDP de Schrijver (algèbre de Terwilliger), qui bat Delsarte sur
-beaucoup d'entrées, n'est pas pris : il demande une positivité semi-définie
-exacte sur ℚ, hors de la machinerie actuelle. Nommé ici parce qu'il explique une
-partie de l'écart mesuré.
+beaucoup d'entrées, explique une partie de l'écart mesuré. Son certificat est
+vérifié par le noyau, sa validité comme relaxation ne l'est pas encore (voir
+plus bas).
 
 Mesure préalable, par `tools/schrijver_sdp.py` — flottant, hors base de
 confiance ; formule des blocs vérifiée spectralement à `n = 6`, modèle vérifié
@@ -126,6 +126,11 @@ Les bornes de Schrijver 2005 ont toutes été battues depuis. Les certifier
 rendrait auditable une borne historique, pas la meilleure connue. Au-delà de
 `n = 20`, le solveur échoue : il annonce `A(22,10) ≤ 5,98` alors qu'un code de
 8 mots est un point faisable du modèle.
+
+`A(19,6) ≤ 1280` est vérifié par le noyau **sous hypothèse** : le programme
+encodé est une relaxation de Schrijver (non démontré, #44, #45). Borne
+historique : Brouwer donne aujourd'hui 1237. Voir
+`Delsarte/Certificate/Schrijver.lean`, `A_19_6_le_of_relaxation`.
 
 ## État actuel
 
