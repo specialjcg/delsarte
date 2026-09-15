@@ -1,5 +1,6 @@
 import Delsarte.LP.WeakDuality
 import Delsarte.SDP.WeakDuality
+import Delsarte.SDP.Sparse
 import Delsarte.Code.Basic
 import Delsarte.Code.Linear
 import Delsarte.Code.Shorten
