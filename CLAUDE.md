@@ -13,20 +13,28 @@ Deux étages, dans cet ordre :
    réalisable donne une borne supérieure valide, même non optimale. Le
    certificat se réduit donc à un vecteur de rationnels, et le vérifier à des
    produits scalaires exacts. Chercher est cher, vérifier est bon marché.
-2. **Le premier résultat visible** — le **kissing number en dimensions 8 et
-   24** (240 et 196 560), établi par la borne LP d'Odlyzko–Sloane. La preuve
-   tient en une page, le certificat est un polynôme explicite de degré modeste,
-   positif sur `[-1, 1/2]`, à coefficients de Gegenbauer positifs. Vérification
-   = arithmétique polynomiale rationnelle.
+2. **Le test de charge** — le **kissing number en dimensions 8 et 24** (240 et
+   196 560), par la borne LP d'Odlyzko–Sloane. Atteint : `kissing_eight`,
+   `kissing_twentyFour`. En dimension 24 il n'est pas neuf, voir ci-dessous.
 
-Hors périmètre : Viazovska (empilement optimal en dimension 8). C'est de
+Hors périmètre : Viazovska (empilement optimal en dimensions 8 et 24, formalisé
+par Math, Inc.). C'est de
 l'analyse dure — fonctions modulaires, formules de sommation — sans rapport
 avec le schéma certificat/vérification retenu ici.
 
-## Ce qui est déjà pris, vérifié en septembre 2026
+## Ce qui est déjà pris, vérifié le 15 septembre 2026
 
 À lire avant de croire qu'un créneau est libre. L'absence de publication n'est
 pas une preuve d'absence de travail en cours.
+
+- [Sphere-Packing-Lean](https://github.com/math-inc/Sphere-Packing-Lean) —
+  Math, Inc., terminé en mars 2026 (commit `1e98fb4` lu). En route vers
+  l'unicité en dimension 24, il formalise la borne LP sphérique avec son
+  certificat (`delsarte_bound_sphere24_real`, `isDelsarteDual24_f24`),
+  `ncard_leechKissingVectors = 196560`, la norme minimale de Leech
+  (`leech_norm_lower_bound`), l'unicité de la configuration (Bannai–Sloane),
+  du Golay et de Witt. 0 `sorry`, 0 `native_decide`. **Kissing 24 : pris.**
+  Kissing 8 : non trouvé. Schéma de Hamming et `A(n,d)` : absents.
 
 - [Formalizing Flag Algebras in Lean](https://arxiv.org/abs/2607.23500) —
   juillet 2026. Compilateur certificat → preuve, sortie SDP traitée comme
@@ -39,8 +47,12 @@ pas une preuve d'absence de travail en cours.
 - [A Lean-Certified Proof of K₈(4,2) = 23](https://arxiv.org/pdf/2606.16688) —
   juin 2026. Même famille, même limite.
 
-Le LP de Delsarte lui-même, sa dualité, et `A(n,d)` — le côté *packing* — ne
-figurent dans aucun des trois. C'est le créneau de ce projet.
+Le LP de Delsarte sur le schéma de Hamming, sa dualité, et `A(n,d)` — le côté
+*packing* — ne figurent dans aucun des quatre. C'est le créneau de ce projet.
+Le SDP de Schrijver (Terwilliger) : aucune formalisation trouvée. L'arrondi
+exact de SDP hors assistant de preuve existe (Dostert–de Laat–Moustrou 2021,
+Cohn–de Laat–Leijenhorst 2024) — source de candidats possible, pas
+d'antériorité.
 
 ## Méthode
 

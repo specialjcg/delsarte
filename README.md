@@ -10,6 +10,12 @@ dimensions 8 et 24 — `240` et `196 560`, établis en 1979 par Odlyzko–Sloane
 Levenshtein — est un **test de charge** du socle, pas la destination. Personne
 n'attend cette preuve.
 
+En dimension 24, la formalisation existe déjà : Math, Inc.
+([Sphere-Packing-Lean](https://github.com/math-inc/Sphere-Packing-Lean), mars
+2026) démontre la borne LP, les 196 560 vecteurs et la norme minimale du réseau.
+La preuve d'ici suit une autre route — liste explicite, séparation famille par
+famille — et n'apporte aucun résultat neuf.
+
 La cible est le côté *packing* du schéma de Hamming : les entrées **ouvertes**
 de la table `A(n,d)`, dont la meilleure borne supérieure connue repose souvent
 sur des calculs flottants jamais rejoués. La dualité faible formalisée rend ces
@@ -17,9 +23,10 @@ bornes **auditables sans refaire le calcul** : tout vecteur dual réalisable,
 même non optimal, donne une borne valide, et la vérifier se réduit à des
 produits scalaires rationnels exacts.
 
-C'est le créneau que les trois formalisations de 2026 laissent vide — flag
-algebras sur graphes simples, codes couvrants q-aires, `K₈(4,2)` : aucune ne
-touche au LP de Delsarte ni à `A(n,d)`.
+C'est le créneau que les quatre formalisations de 2026 laissent vide — flag
+algebras sur graphes simples, codes couvrants q-aires, `K₈(4,2)`, et
+Sphere-Packing-Lean, qui touche au LP sphérique en dimension 24 : aucune ne
+touche au LP de Delsarte sur le schéma de Hamming ni à `A(n,d)`.
 
 ### Ce que le LP nu donne sur les entrées ouvertes
 
@@ -39,6 +46,12 @@ extraction décalée d'une colonne a été rejetée par ce contrôle.
 | 28 | 6 | 291 271 | 131 072 – **291 269** | +2 |
 | 23 | 10 | 151 | 80 – **150** | **+1** |
 | **28** | **12** | **288** | 178 – **288** | **0** |
+
+Colonne « connue » relue sur la table de Brouwer le 15 septembre 2026 : inchangée.
+Un article de 2023 (SDP sur une algèbre de Terwilliger scindée, *Designs, Codes
+and Cryptography*) annonce `A(18,4) ≤ 6551` et `A(19,4) ≤ 13087`, validés en
+flottant avec borne d'erreur, sans certificat exact ; la table ne les reprend
+pas, ce tableau non plus.
 
 Verdict : **le LP nu ne bat le connu nulle part.** C'était l'issue attendue —
 les bornes de table viennent d'un LP *renforcé*, pas du LP brut. Deux faits
@@ -99,6 +112,21 @@ beaucoup d'entrées, n'est pas pris : il demande une positivité semi-définie
 exacte sur ℚ, hors de la machinerie actuelle. Nommé ici parce qu'il explique une
 partie de l'écart mesuré.
 
+Mesure préalable, par `tools/schrijver_sdp.py` — flottant, hors base de
+confiance ; formule des blocs vérifiée spectralement à `n = 6`, modèle vérifié
+sur des codes réels :
+
+| entrée | Delsarte | SDP mesuré | Schrijver 2005 | meilleure connue (Brouwer) |
+|---|---|---|---|---|
+| `A(19,6)` | 1 289,48 | 1 280,036 | 1 280 | 1 237 |
+| `A(19,8)` | 145,30 | 142,447 | 142 | **128**, exacte |
+| `A(20,8)` | 290,59 | 274,072 | 274 | **256**, exacte |
+
+Les bornes de Schrijver 2005 ont toutes été battues depuis. Les certifier
+rendrait auditable une borne historique, pas la meilleure connue. Au-delà de
+`n = 20`, le solveur échoue : il annonce `A(22,10) ≤ 5,98` alors qu'un code de
+8 mots est un point faisable du modèle.
+
 ## État actuel
 
 | Composant | État |
@@ -140,7 +168,7 @@ partie de l'écart mesuré.
 | **Les 759 octades du Golay étendu**, comptées par le noyau | **démontré** — `Delsarte/Code/Octad.lean` |
 | **Les 196 560 vecteurs minimaux de Leech** : norme 32, deux à deux distincts | **démontré** — `Delsarte/Lattice/Leech.lean` |
 | **Séparation des 196 560 vecteurs**, les six paires de familles | **démontré** — `Delsarte/Lattice/Separation.lean` |
-| Norme minimale du réseau de Leech (`≥ 32`) — **non requise** par ce qui précède | à faire |
+| Norme minimale du réseau de Leech (`≥ 32`) — **non requise** par ce qui précède | formalisée ailleurs — Math, Inc., `leech_norm_lower_bound` |
 | Raccourcissement : `A(n+1,q,d) ≤ q · A(n,q,d)` | **démontré** — `Delsarte/Code/Shorten.lean` |
 | Borne arrondie vers le bas (intégralité de `A`) | **démontré** — `Delsarte/Certificate/Floor.lean` |
 | **`A(28,2,12) ≤ 288`** — entrée ouverte, égale la meilleure borne connue | **démontré** — `Delsarte/Certificate/Table6.lean` |
