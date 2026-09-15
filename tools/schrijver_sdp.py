@@ -98,15 +98,19 @@ def orbit(i, j, t):
     return tuple(sorted((i, j, i + j - 2 * t)))
 
 
-def build(n, d):
-    """Return (problem, z, keys): the SDP in z = m x, and orbit -> index of z."""
+def build(n, d, even=True):
+    """Return (problem, z, keys): the SDP in z = m x, and orbit -> index of z.
+
+    `even` applies the even-weight reduction for even d; switching it off gives
+    the program valid for every code, without that lemma.
+    """
 
     def zero(key):
         if key == (0, 0, 0):
             return False
         if any(1 <= v <= d - 1 for v in key):
             return True
-        return d % 2 == 0 and any(v % 2 for v in key)
+        return even and d % 2 == 0 and any(v % 2 for v in key)
 
     keys = {}
 
