@@ -200,6 +200,15 @@ def bnum : ℤ :=
 def check : Bool :=
   0 < C.V && 0 < C.W && (List.range D.nv).all fun u => D.coeff C u == 0
 
+/-- The coefficient check on the variables `lo, …, lo + len - 1` only.
+
+The kernel keeps what it has reduced until the end of a declaration: one `decide`
+over all of Schrijver's variables for `A(19,6)` exhausted the machine's memory,
+while one variable costs a few hundred megabytes. Ranges keep each declaration
+small, and `check_of_coeff` puts them back together. -/
+def checkRange (lo len : ℕ) : Bool :=
+  (List.range' lo len).all fun u => D.coeff C u == 0
+
 end Data
 
 /-! ## Soundness -/
@@ -392,7 +401,63 @@ theorem objForm_le (hc : D.check C = true) {z : ℕ → ℚ} (hz : D.Feasible z)
   rw [le_div_iff₀ hTpos]
   nlinarith [key, hS, hR, hTpos]
 
+theorem coeff_eq_zero_of_checkRange {lo len u : ℕ} (h : D.checkRange C lo len = true)
+    (h1 : lo ≤ u) (h2 : u < lo + len) : D.coeff C u = 0 := by
+  simp only [checkRange, List.all_eq_true, List.mem_range'_1, beq_iff_eq] at h
+  exact h u ⟨h1, h2⟩
+
+theorem coeff_eq_zero_of_check (h : D.check C = true) {u : ℕ} (hu : u < D.nv) :
+    D.coeff C u = 0 := by
+  simp only [check, Bool.and_eq_true, decide_eq_true_eq, List.all_eq_true, List.mem_range,
+    beq_iff_eq] at h
+  exact h.2 u hu
+
+theorem check_of_coeff (hV : 0 < C.V) (hW : 0 < C.W) (h : ∀ u < D.nv, D.coeff C u = 0) :
+    D.check C = true := by
+  simp only [check, Bool.and_eq_true, decide_eq_true_eq, List.all_eq_true, List.mem_range,
+    beq_iff_eq]
+  exact ⟨⟨hV, hW⟩, h⟩
+
 end Data
+
+/-! ## Encoding
+
+Tuples of numerals elaborate slowly under mathlib: two hundred `ℕ × ℕ × ℕ × ℤ`
+literals take about two seconds, and Schrijver's program for `A(19,6)` has fifteen
+thousand (a single literal of them timed out after sixteen minutes). Flat lists of
+natural numbers are about twenty times faster. Integers are stored zigzag, `2c`
+for `c ≥ 0` and `-2c - 1` for `c < 0`, and the tuples are rebuilt by the functions
+below, which the kernel evaluates together with the check.
+
+Nothing about them needs trusting: whatever they return *is* the data that the
+soundness theorem is about.
+-/
+
+/-- Zigzag decoding: `2k ↦ k`, `2k + 1 ↦ -(k + 1)`. -/
+def unzig (c : ℕ) : ℤ :=
+  if c % 2 = 0 then ((c / 2 : ℕ) : ℤ) else -(((c / 2 : ℕ) : ℤ) + 1)
+
+/-- A list of zigzag integers. -/
+def decodeZ (L : List ℕ) : List ℤ := L.map unzig
+
+/-- Flat `l, a, …` to row entries `(l, a)`. -/
+def decode2 : List ℕ → List (ℕ × ℤ)
+  | l :: a :: rest => (l, unzig a) :: decode2 rest
+  | _ => []
+
+/-- Flat `p, q, c, …` to constant block entries `(p, q, c)`. -/
+def decode3 : List ℕ → List (ℕ × ℕ × ℤ)
+  | p :: q :: c :: rest => (p, q, unzig c) :: decode3 rest
+  | _ => []
+
+/-- Flat `b, p, q, c, …` to variable block entries `(b, p, q, c)`. -/
+def decode4 : List ℕ → List (ℕ × ℕ × ℕ × ℤ)
+  | b :: p :: q :: c :: rest => (b, p, q, unzig c) :: decode4 rest
+  | _ => []
+
+example : decode4 [0, 1, 2, 7, 3, 4, 5, 8] = [(0, 1, 2, -4), (3, 4, 5, 4)] := by decide +kernel
+
+example : decode2 [4, 0, 9, 1] = [(4, 0), (9, -1)] := by decide +kernel
 
 /-! ## The two-by-two example, and its negative control
 
