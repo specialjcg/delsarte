@@ -3,6 +3,72 @@
 Formalisation en **Lean 4** du socle du programme linéaire de Delsarte, et des
 certificats qui en découlent.
 
+## À quoi ça sert
+
+**Le problème, sans jargon.** Vous envoyez des bits sur un canal qui en abîme
+quelques-uns au passage. Pour survivre au bruit, on n'utilise pas tous les mots
+possibles : on n'en garde qu'une partie, choisis assez éloignés les uns des
+autres pour qu'une poignée d'erreurs ne puisse jamais transformer un mot en un
+autre. Plus les mots sont écartés, plus on corrige d'erreurs — mais moins il en
+reste, donc moins on transmet d'information par envoi.
+
+`A(n,d)` est le chiffre exact de ce compromis : combien de mots de `n` bits
+peut-on retenir au maximum, si deux quelconques d'entre eux doivent différer en
+au moins `d` positions. C'est un problème d'empilement — des boules qui ne
+doivent pas se chevaucher, dans un cube de dimension `n`.
+
+```
+n = 19 — combien de mots de 19 bits peut-on garder ?
+
+  d = 1     524 288 mots   (2^19, tous)      aucune correction
+  d = 4   ≤  13 106                          corrige 1 erreur
+  d = 6   ≤   1 280                          corrige 2 erreurs
+  d = 19          2 mots                     correction maximale
+
+  Chaque cran de protection coûte un facteur ~10 sur le débit.
+  Les deux bornes du milieu sont celles certifiées dans ce dépôt.
+```
+
+Personne ne sait calculer `A(n,d)` en général. Même pour `n = 19` et `d = 6`,
+la valeur exacte est inconnue : on ne dispose que d'un encadrement, et la
+meilleure borne supérieure publiée est 1237.
+
+**Ce qu'apporte une borne supérieure.** Un théorème d'arrêt. Il ne construit
+aucun code — il dit qu'au-delà d'un certain nombre de mots, chercher est vain.
+Sans lui, on ignore si un code qu'on ne trouve pas est impossible, ou seulement
+pas encore trouvé. C'est la différence entre une recherche qui a échoué et une
+recherche qui n'avait pas lieu d'être.
+
+**Pourquoi le vérifier par machine.** Ces bornes sortent de solveurs numériques,
+en virgule flottante, dont la sortie n'est presque jamais rejouée. Elles entrent
+dans les tables de référence et y restent, citées telles quelles pendant des
+années. Une erreur d'arrondi n'y laisse aucune trace visible.
+
+Ici le solveur ne fait autorité sur rien. Il propose un candidat ; le noyau de
+Lean le recalcule en rationnels exacts, sans jamais voir le programme qui l'a
+produit.
+
+```mermaid
+flowchart LR
+    S["Solveur LP/SDP<br/>virgule flottante"] -->|candidat| R["Arrondi exact<br/>en rationnels"]
+    R -->|certificat| K["Noyau Lean<br/>produits scalaires exacts"]
+    K -->|accepte| T["A(n,d) ≤ v<br/>théorème"]
+    K -->|rejette| N["contrôle négatif"]
+
+    style S stroke-dasharray: 5 5
+    style R stroke-dasharray: 5 5
+```
+
+En pointillés, ce qui est hors base de confiance. Chercher reste cher, vérifier
+devient bon marché — et n'importe qui peut rejouer la vérification sans avoir à
+faire confiance à celui qui a fourni le certificat. La flèche « rejette » compte
+autant que l'autre : un vérificateur qui n'a jamais rien refusé n'a rien prouvé.
+
+**Ce qui se transporte.** Le schéma — solveur hors base de confiance, certificat
+rationnel, vérification par le noyau, contrôles négatifs — ne dépend pas de
+Delsarte. Il vaut pour d'autres bornes de combinatoire obtenues par
+programmation linéaire ou semi-définie.
+
 ## But
 
 Ce dépôt ne vise pas à redémontrer des résultats acquis. Le kissing number en
