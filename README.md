@@ -30,6 +30,25 @@ n = 19 — combien de mots de 19 bits peut-on garder ?
   une hypothèse non prouvée (#44, #45) — voir plus bas.
 ```
 
+Pour voir de quoi il s'agit, un cas assez petit pour tenir dans une image — et
+le seul que ce dépôt épingle des deux côtés :
+
+![Le code de Hamming étendu [8,4,4] dans le cube de dimension 8](figures/hamming8.svg)
+
+`n = 8`, `d = 4`. Les 256 cases sont les mots de 8 bits ; deux cases voisines à
+l'écran sont à distance 1 (la réciproque est fausse : sur les 8 voisins d'un
+mot, 4 seulement sont adjacents dans cette disposition). Les 16 cases vives
+forment le code de Hamming étendu, et autour de chacune sa boule de rayon 1.
+Aucune boule n'en recouvre une autre, et il reste 112 cases libres — pourtant
+aucun 17ᵉ mot ne tient : les deux cases cerclées sont à distance 2, il en
+faudrait 4. Ce n'est pas la place qui manque.
+
+`A(8,4) = 16` est démontré ici dans les deux sens — borne haute par certificat
+LP (`A_8_2_4_le`), borne basse par la matrice génératrice (`A_8_2_4_ge`),
+recollées par `le_antisymm` en `A_8_2_4_eq`. La figure est engendrée par
+`tools/figure_hamming8.py`, qui recalcule et vérifie chaque nombre affiché
+avant d'écrire le fichier.
+
 Personne ne sait calculer `A(n,d)` en général. Même pour `n = 19` et `d = 6`,
 la valeur exacte est inconnue : on ne dispose que d'un encadrement, et la
 meilleure borne supérieure publiée est 1237.
