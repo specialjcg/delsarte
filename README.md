@@ -69,16 +69,7 @@ Ici le solveur ne fait autorité sur rien. Il propose un candidat ; le noyau de
 Lean le recalcule en rationnels exacts, sans jamais voir le programme qui l'a
 produit.
 
-```mermaid
-flowchart LR
-    S["Solveur LP/SDP<br/>virgule flottante"] -->|candidat| R["Arrondi exact<br/>en rationnels"]
-    R -->|certificat| K["Noyau Lean<br/>produits scalaires exacts"]
-    K -->|accepte| T["A(n,d) ≤ v<br/>théorème"]
-    K -->|rejette| N["contrôle négatif"]
-
-    style S stroke-dasharray: 5 5
-    style R stroke-dasharray: 5 5
-```
+![Le solveur propose un candidat, le noyau de Lean le vérifie ou le rejette](figures/pipeline.svg)
 
 En pointillés, ce qui est hors base de confiance. Chercher reste cher, vérifier
 devient bon marché — et n'importe qui peut rejouer la vérification sans avoir à
