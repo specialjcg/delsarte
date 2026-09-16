@@ -49,6 +49,20 @@ recollées par `le_antisymm` en `A_8_2_4_eq`. La figure est engendrée par
 `tools/figure_hamming8.py`, qui recalcule et vérifie chaque nombre affiché
 avant d'écrire le fichier.
 
+La même égalité, vue non plus dans le cube mais dans sa démonstration :
+
+![L'arbre de preuve de A(8,2,4) = 16](figures/proof8.svg)
+
+Chaque boîte est un théorème du dépôt, avec son fichier et sa ligne. La racine,
+`weak_duality`, est énoncée sur un anneau ordonné quelconque et ne sait rien des
+codes : c'est elle qui rend le socle réutilisable. Les deux feuilles encadrées de
+vert sont des `by decide` sur des entiers — le seul endroit où quelque chose est
+calculé, et le noyau s'en charge. Entre les deux, aucune étape numérique. La
+branche gauche descend du certificat, la droite de la matrice génératrice ;
+`le_antisymm` les recolle. La figure est engendrée par `tools/figure_proof8.py`,
+qui recalcule le certificat en rationnels exacts et vérifie les cinq contraintes
+duales avant d'écrire le fichier — ce sont les nombres imprimés en bas.
+
 Personne ne sait calculer `A(n,d)` en général. Même pour `n = 19` et `d = 6`,
 la valeur exacte est inconnue : on ne dispose que d'un encadrement, et la
 meilleure borne supérieure publiée est 1237.
