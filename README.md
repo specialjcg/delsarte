@@ -21,12 +21,13 @@ doivent pas se chevaucher, dans un cube de dimension `n`.
 n = 19 — combien de mots de 19 bits peut-on garder ?
 
   d = 1     524 288 mots   (2^19, tous)      aucune correction
-  d = 4   ≤  13 106                          corrige 1 erreur
-  d = 6   ≤   1 280                          corrige 2 erreurs
+  d = 4   ≤  13 106        certifié          corrige 1 erreur
+  d = 6   ≤   1 280        sous hypothèse    corrige 2 erreurs
   d = 19          2 mots                     correction maximale
 
-  Chaque cran de protection coûte un facteur ~10 sur le débit.
-  Les deux bornes du milieu sont celles certifiées dans ce dépôt.
+  Le prix n'est pas régulier : ×40 d'un cran au suivant, puis ×10.
+  13 106 est démontré ici sans hypothèse. 1 280 ne l'est que sous
+  une hypothèse non prouvée (#44, #45) — voir plus bas.
 ```
 
 Personne ne sait calculer `A(n,d)` en général. Même pour `n = 19` et `d = 6`,
@@ -40,9 +41,10 @@ pas encore trouvé. C'est la différence entre une recherche qui a échoué et u
 recherche qui n'avait pas lieu d'être.
 
 **Pourquoi le vérifier par machine.** Ces bornes sortent de solveurs numériques,
-en virgule flottante, dont la sortie n'est presque jamais rejouée. Elles entrent
-dans les tables de référence et y restent, citées telles quelles pendant des
-années. Une erreur d'arrondi n'y laisse aucune trace visible.
+en virgule flottante, dont la sortie est rarement rejouée en arithmétique
+exacte. Elles entrent dans les tables de référence et y restent, citées telles
+quelles pendant des années. Une erreur d'arrondi n'y laisse aucune trace
+visible.
 
 Ici le solveur ne fait autorité sur rien. Il propose un candidat ; le noyau de
 Lean le recalcule en rationnels exacts, sans jamais voir le programme qui l'a
