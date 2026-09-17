@@ -41,25 +41,39 @@ What was checked independently of any solver:
   * the model never excludes an actual code: the point z = lambda / |C| of a
     real code satisfies every constraint, with objective |C| (`--controls`).
 
-Measured with Clarabel (relative primal-dual gap below 3e-7):
+Measured on the default program, Clarabel with SCS as fallback:
 
-    A(19,6)   1280.036    Table I: 1280    Delsarte 1289.48
-    A(19,8)    142.447    Table I:  142    Delsarte  145.30
-    A(20,8)    274.072    Table I:  274    Delsarte  290.59
+    A(19,6)  1280.036247  Table I: 1280  Delsarte 1289.48  viol 2.2e-07
+    A(19,8)   142.446060  Table I:  142  Delsarte  145.30  viol 1.7e-05  *
+    A(20,8)   274.085704  Table I:  274  Delsarte  290.59  viol 3.9e-08
 
-Known limitation, not hidden: from n = 22 on, Clarabel stops with tiny
-residuals on values that are *wrong*.  It reports A(22,10) <= 5.98 and
-A(23,6) <= 450.6, although an 8-word code at (22,10) is a feasible point of
-value 8.  SCS does not converge either.  Those rows are therefore not controls.
+    * not a control: see UNCONTROLLED.  The floor is right, the residual is not
+      small enough to stand on, and no solver setting brings it down.
 
-For even d, weights are restricted to even values, as the paper does: A(n, d)
-is attained by an even-weight code.
+An earlier version of this block quoted 1280.036, 142.447 and 274.072, which
+were the restricted program's numbers.  They are close enough to look like the
+same measurement and are not.
+
+Known limitation, not hidden: the even-weight reduction (`--even`) is *not*
+sound as implemented.  It forces every orbit component to be even, and on
+d = 10 that cuts the feasible set below the true optimum: A(20,10) comes back
+as 17.52 where the exact value is 40, and A(22,10) as 5.98 where a 64-word code
+exists.  A bound under the true value is not a weak bound, it is a false one.
+The default is therefore `even=False` -- the program valid for every code, and
+the one `schrijver_cert.py` already used.
+
+An earlier version of this note blamed the solver for those same numbers, and
+that was wrong.  With `even=False`, A(22,10) solves cleanly to 87.97.  The
+genuine numerical wall is narrower and it announces itself: at (21,10) Clarabel
+raises SolverError rather than returning a wrong value, and SCS gives 51.81.
 
 Requires cvxpy and clarabel (kept out of the repository; a scratch venv will
 do).  Usage:
 
     schrijver_sdp.py n d          one entry
     schrijver_sdp.py --controls   anchors, Table I rows, real codes feasible
+    schrijver_sdp.py ... --even   the restricted program, kept only to show
+                                  that the controls reject it
 """
 
 from itertools import combinations
@@ -217,22 +231,81 @@ def max_violation(prob):
     return max(float(np.max(c.violation())) for c in prob.constraints)
 
 
-def sdp_value(n, d, solver="CLARABEL"):
-    prob, z, keys = build(n, d)
-    prob.solve(solver=solver)
-    if prob.status not in ("optimal", "optimal_inaccurate"):
-        raise RuntimeError(f"A({n},{d}): solver status {prob.status}")
-    return prob.value, len(keys), prob.status, max_violation(prob)
+SOLVERS = ("CLARABEL", "SCS")
+ACCEPT = 1e-6        # violation below which a point is good enough to keep
+
+# Clarabel runs at its defaults on purpose: tightening tol_gap and tol_feas to
+# 1e-12 changed (15,6) by not one bit, so the knobs buy nothing and only cost
+# iterations.  SCS is the fallback and is kept sober -- at eps 1e-11 with
+# 200000 iterations it never returns, and burned a ten-minute budget on the
+# first control without printing a line.
+SOLVER_OPTS = {
+    "CLARABEL": {},
+    "SCS": dict(eps_abs=1e-10, eps_rel=1e-10, max_iters=50000),
+}
+
+# Cases where the full program is out of reach of the free solvers: the value
+# comes back right, the violation does not come down, and no setting moves it.
+# At (19,8) Clarabel converges to 1.7e-5 and five times the iteration budget
+# does not shift a digit, while SCS collapses onto the bare Delsarte value at
+# violations of 0.2 to 0.6 -- worse the longer it runs.  They are reported and
+# left out of the verdict rather than passed by loosening ACCEPT, which would
+# hide them.  The remedy is arbitrary precision (SDPA-GMP), not more
+# iterations.  It is not a size effect: (19,6) has 156 variables and settles at
+# 2.2e-7, better than (19,8) with 86.  Why these two resist is not understood.
+UNCONTROLLED = {
+    (19, 8): "Clarabel stalls at 1.7e-5, SCS diverges to the LP value",
+    (22, 10): "Clarabel stalls at 2.8e-6",
+}
 
 
-def code_point(n, d, code):
+def sdp_value(n, d, solver=None, even=False):
+    """Solve and return (value, nvars, status, max violation).
+
+    With `solver=None` the entries of `SOLVERS` are tried in order and the
+    first point under `ACCEPT` wins; if none qualifies, the smallest violation
+    does.  Neither solver is reliable alone on the full program: Clarabel
+    stalls at (15,6) on a 3.5e-6 violation that tighter tolerances do not move
+    at all and SCS clears to 5e-9, while SCS collapses at (19,8) onto the bare
+    Delsarte value with a violation of 0.2.  Choosing per case beats trusting
+    either one, and stopping early keeps the cases Clarabel already settles
+    from paying for a second solve.
+
+    The violation measures feasibility, never correctness.  The even-weight
+    reduction used to return A(22,10) <= 5.98 -- false by a factor of ten --
+    at a violation of 2.3e-17.  A clean residual on a wrong model is still a
+    wrong answer, which is why `controls` guards values, not residuals.
+    """
+    prob, z, keys = build(n, d, even)
+    best = None
+    for name in ([solver] if solver else SOLVERS):
+        try:
+            prob.solve(solver=name, **SOLVER_OPTS.get(name, {}))
+        except Exception:
+            continue
+        if prob.status not in ("optimal", "optimal_inaccurate"):
+            continue
+        viol = max_violation(prob)
+        if best is None or viol < best[3]:
+            best = (prob.value, len(keys), prob.status, viol)
+        if viol < ACCEPT:
+            break
+    if best is None:
+        raise RuntimeError(f"A({n},{d}): no solver returned a usable point")
+    return best
+
+
+def code_point(n, d, code, even=False):
     """Plug an actual code into the model: (objective, max violation, stray orbits).
 
     z^t_{i,j} = lambda^t_{i,j} / |C|, with lambda counting the triples (X, Y, Z)
     of codewords such that |X^Y| = i, |X^Z| = j, |(X^Y) & (X^Z)| = t.  A stray
     orbit is one the model forces to zero although the code populates it.
+
+    `even` must match the program being measured, or the witness is tested
+    against a formulation nobody solved.
     """
-    prob, z, keys = build(n, d)
+    prob, z, keys = build(n, d, even)
     pc = lambda v: bin(v).count("1")
     counts = {}
     for X in code:
@@ -259,12 +332,19 @@ def delsarte_value(n, d):
     return 1 + opt
 
 
-def report(n, d, solver="CLARABEL"):
-    v, nv, status, viol = sdp_value(n, d, solver)
+def report(n, d, solver=None, even=False):
+    v, nv, status, viol = sdp_value(n, d, solver, even)
     lp = delsarte_value(n, d)
     fl = floor(v + 1e-6)
     print(f"A({n},{d})  vars={nv}  status={status}  maxViolation={viol:.1e}")
     print(f"  Schrijver SDP  {v:.6f}  -> floor {fl}  (margin below {fl + 1}: {fl + 1 - v:.6f})")
+    # A float sitting just under an integer does not decide that floor: at
+    # (16,8) the optimum is 32 and the solve returns 31.999994, which floors to
+    # 31 and would be a false bound.  Only the exact rounding decides, which is
+    # what schrijver_cert.py is for.  Say so rather than tune the fudge factor.
+    if fl + 1 - v < 1e-3:
+        print(f"  ^ within {fl + 1 - v:.1e} of {fl + 1}:"
+              f" the float does not decide this floor")
     print(f"  Delsarte LP    {float(lp):.6f}  (exact {lp})")
     return v, lp
 
@@ -273,7 +353,7 @@ def mask(coords):
     return sum(1 << c for c in coords)
 
 
-def controls():
+def controls(even=False):
     """Every check must pass, or the formulation or the solve is wrong."""
     ok = True
     tol = 1e-4
@@ -283,30 +363,51 @@ def controls():
         ok &= good
         print(f"[{'ok' if good else 'FAIL'}] {text}")
 
+    def check(n, d, good, text):
+        """Report a case, withholding the verdict where no solver reaches ACCEPT.
+
+        Only on the full program: under `--even` these same cases converge to
+        1e-13, and the guard must still fail on them -- that is the point.
+        """
+        if not even and (n, d) in UNCONTROLLED:
+            print(f"[skip] {text}  -- {UNCONTROLLED[(n, d)]}")
+        else:
+            line(good, text)
+
     # Closed entries: the SDP is an upper bound, so it can never drop below them.
     # A formulation that is too strong is rejected here.
     for n, d, exact in [(8, 4, 16), (12, 6, 24), (15, 6, 128), (12, 4, 144)]:
-        v, _, status, viol = sdp_value(n, d)
+        v, _, status, viol = sdp_value(n, d, even=even)
         lp = float(delsarte_value(n, d))
-        line(v >= exact - tol and v <= lp + tol and viol < 1e-6,
-             f"A({n},{d}) = {exact}:  SDP {v:.4f}  LP {lp:.4f}  {status} viol {viol:.1e}")
+        check(n, d, v >= exact - tol and v <= lp + tol and viol < ACCEPT,
+              f"A({n},{d}) = {exact}:  SDP {v:.4f}  LP {lp:.4f}  {status} viol {viol:.1e}")
+
+    # Open entries at d = 10, where the even-weight reduction collapsed the
+    # model below the truth and nothing here noticed.  Only a lower guard
+    # catches that: a bound under the true value is not weak, it is false.
+    # Values read from Brouwer's table, see tools/crosscheck_brouwer.py.
+    for n, d, atleast in [(18, 10, 10), (20, 10, 40), (22, 10, 64)]:
+        v, _, status, viol = sdp_value(n, d, even=even)
+        check(n, d, v >= atleast - tol and viol < ACCEPT,
+              f"A({n},{d}) >= {atleast}:  SDP {v:.4f}  {status} viol {viol:.1e}")
 
     # Table I of the paper: the integer part must come back.  A formulation
     # that is too weak, or a solve that is not feasible, is rejected here.
     for n, d, table in [(19, 6, 1280), (19, 8, 142), (20, 8, 274)]:
-        v, _, status, viol = sdp_value(n, d)
+        v, _, status, viol = sdp_value(n, d, even=even)
         lp = float(delsarte_value(n, d))
-        line(floor(v + 1e-6) == table and v <= lp + tol and viol < 1e-6,
-             f"Table I A({n},{d}) <= {table}:  SDP {v:.6f}  LP {lp:.4f}  {status} viol {viol:.1e}")
+        check(n, d, floor(v + 1e-6) == table and v <= lp + tol and viol < ACCEPT,
+              f"Table I A({n},{d}) <= {table}:  SDP {v:.6f}  LP {lp:.4f}  {status} viol {viol:.1e}")
 
-    # Actual codes are feasible points of value |C|, including at n = 22 and 23
-    # where the solver fails: the failure is numerical, not in the model.
+    # Actual codes are feasible points of value |C|.  These witnesses are small
+    # -- 4 and 8 words -- and that is their weakness: at (22,10) a 64-word code
+    # exists, so an 8-word witness passed while the model was returning 5.98.
     blocks5 = [range(5 * b, 5 * b + 5) for b in range(4)]
     code5 = ([0] + [mask([*blocks5[p], *blocks5[q]]) for p, q in combinations(range(4), 2)]
              + [mask(range(20))])
     code6 = [0, mask(range(6)), mask(range(6, 12)), mask(range(12))]
     for n, d, code in [(22, 10, code5), (20, 10, code5), (23, 6, code6), (19, 6, code6)]:
-        obj, viol, stray = code_point(n, d, code)
+        obj, viol, stray = code_point(n, d, code, even)
         line(abs(obj - len(code)) < 1e-9 and viol < 1e-8 and not stray,
              f"code of {len(code)} words feasible at ({n},{d}):  obj {obj:.6f}  viol {viol:.1e}")
 
@@ -315,10 +416,12 @@ def controls():
 
 
 if __name__ == "__main__":
-    if len(sys.argv) >= 2 and sys.argv[1] == "--controls":
-        sys.exit(0 if controls() else 1)
-    if len(sys.argv) >= 3:
-        report(int(sys.argv[1]), int(sys.argv[2]),
-               sys.argv[3] if len(sys.argv) >= 4 else "CLARABEL")
+    even = "--even" in sys.argv
+    argv = [a for a in sys.argv if a != "--even"]
+    if len(argv) >= 2 and argv[1] == "--controls":
+        sys.exit(0 if controls(even) else 1)
+    if len(argv) >= 3:
+        report(int(argv[1]), int(argv[2]),
+               argv[3] if len(argv) >= 4 else None, even)
     else:
         print(__doc__)
