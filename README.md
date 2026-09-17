@@ -290,6 +290,18 @@ majorations deviennent des **égalités**, `A(23,2,7) = 4096`, `A(24,2,8) = 4096
 et `A(8,2,4) = 16`. Ce sont les premières égalités du côté combinatoire ; le
 dépôt n'écrivait jusque-là que des `≤` faute de code construit.
 
+Ces bornes ont été confrontées à la table de Brouwer le 16 septembre 2026, et
+aucune ne la contredit : sur trente-trois énoncés binaires, vingt-deux égalent la
+meilleure borne supérieure publiée, onze restent au-dessus, aucune ne passe en
+dessous. Une borne qui passerait en dessous serait une amélioration sur la
+littérature, ou bien — nettement plus souvent — un défaut dans la chaîne de
+certificats ; dans les deux cas, ce n'est pas à un relecteur de le découvrir. La
+comparaison est rejouée par `tools/crosscheck_brouwer.py` contre une copie figée
+de la table, sans accès réseau, et la CI échoue si une borne descend un jour sous
+l'état de l'art. « Égale la meilleure borne publiée » ne veut pas dire « égale la
+vraie valeur » : `A(28,2,12) ≤ 288` est serrée en ce sens, alors que la vraie
+valeur n'est connue que dans `[178, 288]`.
+
 Ce qui rend la chose abordable, c'est la linéarité. `MinDistAtLeast` quantifie
 sur les paires — 16,7 millions pour Golay, hors de portée du noyau — alors qu'un
 code linéaire ramène la distance minimale au poids minimal non nul : 4095 poids.

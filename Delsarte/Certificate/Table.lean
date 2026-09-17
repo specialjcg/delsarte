@@ -48,7 +48,10 @@ Generation removes that step; Lean re-checks the result, and
 
 Only upper halves. No code is constructed anywhere in this repository, so no line
 of this table may be read as an equality — the "true value" column is quoted from
-the literature, not proved here.
+the literature, not proved here. It was confronted with Brouwer's table on
+2026-09-16 and agrees on all twelve rows; `tools/crosscheck_brouwer.py` replays
+that comparison against a frozen copy of the table, and fails if any bound proved
+here ever drops below a published one.
 
 `A(12,2,5) ≤ 40` is the entry that is *not* tight, and it is kept for that reason:
 the true value is 32, and the plain Delsarte linear program does not reach it.

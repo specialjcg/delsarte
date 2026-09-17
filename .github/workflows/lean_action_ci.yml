@@ -42,3 +42,19 @@ jobs:
       - name: Check for a bare Mathlib import
         run: |
           ! grep -rn --include='*.lean' -E '^import Mathlib$' Delsarte/ Main.lean
+
+      # Every bound proved here is confronted with Brouwer's published table.
+      # The copy is frozen in the repository and the check never reaches the
+      # network: the URL already moved once, and a check that depends on someone
+      # else's site is a check that breaks when they reorganise it.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # Fails if a bound proved here drops below a published upper bound. That
+      # would be an improvement on the literature, or -- far more often -- a bug
+      # in the certificate pipeline. Either way nobody should learn it from a
+      # paper referee.
+      - name: Cross-check bounds against Brouwer's table
+        run: |
+          python3 tools/crosscheck_brouwer.py
