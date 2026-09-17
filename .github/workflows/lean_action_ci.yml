@@ -58,3 +58,12 @@ jobs:
       - name: Cross-check bounds against Brouwer's table
         run: |
           python3 tools/crosscheck_brouwer.py
+
+      # The block coefficients the Schrijver certificate is generated from,
+      # checked against equation (7) of the paper and against the Gram identity
+      # that makes the blocks positive. It imports the same `beta()` the
+      # generator uses, so a drift between the formula and the shipped data
+      # fails here rather than in a proof nobody reruns.
+      - name: Check Schrijver's block coefficients
+        run: |
+          python3 tools/check_beta.py

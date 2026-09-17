@@ -14,7 +14,8 @@ Variables x^t_{i,j}, one per orbit of the triple (i, j, i + j - 2t) under
 permutation (condition (20)(iii)).  A triple (i, j, t) is realisable iff
 t <= min(i, j) and i + j - t <= n; otherwise x^t_{i,j} = 0 (below (11)).
 
-    (7)   beta^t_{i,j,k} = sum_u (-1)^(u-t) C(u,t) C(n-2k,u-k) C(n-k-u,i-u) C(n-k-u,j-u)
+    (7)   beta^t_{i,j,k}, the block coefficients; `schrijver_algebra.py` defines
+          them and carries the Gram identity their positivity comes from
     (19)  for k = 0..floor(n/2), with i, j in k..n-k, both matrices PSD:
               ( sum_t beta^t_{i,j,k} x^t_{i,j} )
               ( sum_t beta^t_{i,j,k} (x^0_{i+j-2t,0} - x^t_{i,j}) )
@@ -22,6 +23,10 @@ t <= min(i, j) and i + j - t <= n; otherwise x^t_{i,j} = 0 (below (11)).
           x^0_{i,0} + x^0_{j,0} <= 1 + x^t_{i,j};
           x^t_{i,j} = 0 if {i, j, i+j-2t} meets {1, ..., d-1}
     (22)  maximise sum_i C(n,i) x^0_{i,0}
+
+The block coefficients themselves live in `schrijver_algebra.py`, together with
+the Gram identity their positivity comes from; `check_beta.py` replays both, and
+runs without cvxpy so that CI can.
 
 Scaling.  The raw x^t_{i,j} are of order 1/m(i,j,t), with m the multinomial
 n! / ((i-t)! (j-t)! t! (n-i-j+t)!), down to 1e-7 at n = 22.  A solver's
@@ -77,7 +82,7 @@ do).  Usage:
 """
 
 from itertools import combinations
-from math import comb, factorial, floor
+from math import floor
 from pathlib import Path
 import sys
 
@@ -88,28 +93,10 @@ import scipy.sparse as sp
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import delsarte_lp  # noqa: E402
 
-
-def C(a, b):
-    return comb(a, b) if 0 <= b <= a else 0
-
-
-def beta(n, i, j, k, t):
-    return sum((-1) ** (u - t) * C(u, t) * C(n - 2 * k, u - k)
-               * C(n - k - u, i - u) * C(n - k - u, j - u)
-               for u in range(n + 1))
-
-
-def realisable(n, i, j, t):
-    return 0 <= t <= min(i, j) and i + j - t <= n
-
-
-def mult(n, i, j, t):
-    return factorial(n) // (factorial(i - t) * factorial(j - t) * factorial(t)
-                            * factorial(n - i - j + t))
-
-
-def orbit(i, j, t):
-    return tuple(sorted((i, j, i + j - 2 * t)))
+# Re-exported rather than re-imported by `schrijver_cert.py`: what matters is
+# that the solver, the certificate generator and `check_beta.py` share the same
+# objects, not three copies of the same formula.
+from schrijver_algebra import C, beta, mult, orbit, realisable  # noqa: E402,F401
 
 
 def build(n, d, even=True):
