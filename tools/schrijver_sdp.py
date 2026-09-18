@@ -40,9 +40,14 @@ one z per orbit is consistent.  Each block of (19) is also conjugated by the
 positive diagonal sqrt(C(n,i) / C(n-2k,i-k)), which preserves semidefiniteness.
 
 What was checked independently of any solver:
-  * the block formula (7)-(8): for n = 6 the spectrum of sum x^t_{i,j} M^t_{i,j}
-    on all 64 subsets equals the blocks' spectra, with multiplicities
-    C(n,k) - C(n,k-1), to 3e-14;
+  * the block coefficients: `tools/check_beta.py` replays beta against (7) as
+    exact integers for every (n,i,j,k,t) with n <= 24, and replays the Gram
+    identity beta is defined by to n = 10, with two negative controls.  It runs
+    in CI, so it is rerun by someone other than the author.  An earlier version
+    of this line claimed instead that for n = 6 the spectrum of
+    sum x^t_{i,j} M^t_{i,j} matched the blocks' spectra to 3e-14.  That
+    comparison was made once, by hand, and never committed: no file here could
+    reproduce it, and it is not a control.
   * the model never excludes an actual code: the point z = lambda / |C| of a
     real code satisfies every constraint, with objective |C| (`--controls`).
 
