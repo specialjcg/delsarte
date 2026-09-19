@@ -95,6 +95,73 @@ def beta (n i j k t : ℕ) : ℤ :=
   ∑ r ∈ range (t + 1),
     (-1 : ℤ) ^ (k + t + r) * (k.choose (t - r) : ℤ) * (mult (n - 2 * k) (i - k) (j - k) r : ℤ)
 
+/-- The alternating binomial sum `beta` is built from, abstracted over what it
+weighs.
+
+Keeping `m` abstract separates the arithmetic of the recurrence -- Pascal and the
+signs -- from the combinatorics that supplies the counts. The three lemmas below
+are the entire content of the induction on `P`. -/
+def betaAux (k t : ℕ) (m : ℕ → ℤ) : ℤ :=
+  ∑ r ∈ range (t + 1), (-1 : ℤ) ^ (k + t + r) * (k.choose (t - r) : ℤ) * m r
+
+/-- With no pairs, only `r = t` survives: `C(0, t - r)` vanishes elsewhere. -/
+theorem betaAux_zero (t : ℕ) (m : ℕ → ℤ) : betaAux 0 t m = m t := by
+  rw [betaAux, Finset.sum_eq_single t]
+  · simp
+  · intro r hr hrt
+    have : t - r ≠ 0 := by
+      have := Nat.lt_succ_iff.1 (Finset.mem_range.1 hr)
+      omega
+    simp [Nat.choose_eq_zero_of_lt (Nat.pos_of_ne_zero this)]
+  · intro h
+    simp at h
+
+/-- At `t = 0` the two agreeing traces are impossible, so a pair only flips the
+sign. Stated apart from `betaAux_step` because `t - 1` on `ℕ` would silently
+readmit them. -/
+theorem betaAux_zero_step (k : ℕ) (m : ℕ → ℤ) : betaAux (k + 1) 0 m = -betaAux k 0 m := by
+  simp [betaAux, pow_succ]
+
+/-- The recurrence the peeling produces, on the coefficient side. This is Pascal:
+`C(k+1, t+1-r) = C(k, t-r) + C(k, t+1-r)`, with the `r = t+1` term split off
+because the two sums do not range over the same set. -/
+theorem betaAux_step (k t : ℕ) (m : ℕ → ℤ) :
+    betaAux (k + 1) (t + 1) m = betaAux k t m - betaAux k (t + 1) m := by
+  have hsum : ∑ r ∈ range (t + 1),
+        ((-1 : ℤ) ^ (k + 1 + (t + 1) + r) * (((k + 1).choose (t + 1 - r) : ℤ)) * m r)
+      = ∑ r ∈ range (t + 1),
+        ((-1 : ℤ) ^ (k + t + r) * ((k.choose (t - r) : ℤ)) * m r
+          - (-1 : ℤ) ^ (k + (t + 1) + r) * ((k.choose (t + 1 - r) : ℤ)) * m r) := by
+    refine Finset.sum_congr rfl fun r hr => ?_
+    have hrt : r ≤ t := Nat.lt_succ_iff.1 (Finset.mem_range.1 hr)
+    have hsub : t + 1 - r = (t - r) + 1 := by omega
+    have e1 : (-1 : ℤ) ^ (k + 1 + (t + 1) + r) = (-1 : ℤ) ^ (k + t + r) := by
+      rw [show k + 1 + (t + 1) + r = (k + t + r) + 2 by ring, pow_add]; ring
+    have e2 : (-1 : ℤ) ^ (k + (t + 1) + r) = -((-1 : ℤ) ^ (k + t + r)) := by
+      rw [show k + (t + 1) + r = (k + t + r) + 1 by ring, pow_succ]; ring
+    rw [e1, e2, hsub, Nat.choose_succ_succ]
+    push_cast
+    ring
+  have hlast : (-1 : ℤ) ^ (k + 1 + (t + 1) + (t + 1)) * (((k + 1).choose (t + 1 - (t + 1)) : ℤ))
+        * m (t + 1)
+      = -((-1 : ℤ) ^ (k + (t + 1) + (t + 1)) * ((k.choose (t + 1 - (t + 1)) : ℤ)) * m (t + 1)) := by
+    simp only [Nat.sub_self, Nat.choose_zero_right, Nat.cast_one, mul_one]
+    rw [show k + 1 + (t + 1) + (t + 1) = (k + (t + 1) + (t + 1)) + 1 by ring, pow_succ]
+    ring
+  simp only [betaAux]
+  rw [Finset.sum_range_succ (n := t + 1)
+        (f := fun r => (-1 : ℤ) ^ (k + 1 + (t + 1) + r) * (((k + 1).choose (t + 1 - r) : ℤ)) * m r),
+      Finset.sum_range_succ (n := t + 1)
+        (f := fun r => (-1 : ℤ) ^ (k + (t + 1) + r) * ((k.choose (t + 1 - r) : ℤ)) * m r),
+      hsum, Finset.sum_sub_distrib, hlast]
+  ring
+
+/-- `beta` relativised to a set `F` of free coordinates, so that no index is a
+truncated subtraction and no type changes. Tying this back to `beta` is a
+separate step, and it is the one that carries the change of type. -/
+def betaOn (F : Finset (Fin n)) (i j k t : ℕ) : ℤ :=
+  betaAux k t fun r => (multOn F i j r : ℤ)
+
 /-- The weight of a subset attached to a family of coordinate pairs. It is `0`
 unless `v` contains exactly one coordinate of each pair. -/
 def cc (P : Finset (Fin n × Fin n)) (v : Finset (Fin n)) : ℤ :=
@@ -159,6 +226,14 @@ theorem coords_eq_biUnion (P : Finset (Fin n × Fin n)) :
   · rintro ⟨p, hp, (rfl | rfl)⟩
     · exact Or.inl ⟨p, hp, rfl⟩
     · exact Or.inr ⟨p, hp, rfl⟩
+
+/-- Inserting a pair adds exactly its two coordinates. Proved through
+`coords_eq_biUnion` rather than by hand: `biUnion_insert` does the work and
+avoids unpicking nested existentials. -/
+theorem coords_insert (p : Fin n × Fin n) (P : Finset (Fin n × Fin n)) :
+    coords (insert p P) = insert p.1 (insert p.2 (coords P)) := by
+  rw [coords_eq_biUnion, coords_eq_biUnion, Finset.biUnion_insert]
+  simp [Finset.insert_union, Finset.singleton_union]
 
 /-- `k` disjoint pairs occupy `2k` coordinates. This is the readable form of
 `DisjointPairs`; the definition is the one the proofs consume. -/
@@ -307,5 +382,55 @@ theorem gramOn_insert_pair_zero {G : Finset (Fin n)} {a b : Fin n}
     Finset.card_insert_of_notMem, Finset.insert_inter_of_notMem,
     Finset.inter_insert_of_notMem, Finset.inter_insert_of_mem]
   split_ifs <;> ring
+
+/-- The Gram sum in closed form, over a ground set split into free coordinates
+`F` and the coordinates of `P`.
+
+Parametrised by the *free* sizes `i` and `j` rather than by `i - k`: that keeps
+every index honest, where `beta` pays for the same statement with truncated
+subtraction and a change of type. `F` stays fixed throughout the induction --
+peeling a pair shrinks `coords P`, not `F`.
+
+This is the induction step of the Gram identity of `THEOREM1.md` §4 joined to
+its base case. What it does *not* do is tie `betaOn` back to `beta`; that
+recollement is still open. -/
+theorem gramOn_eq_pow_mul_betaOn (F : Finset (Fin n)) (i j : ℕ) :
+    ∀ (P : Finset (Fin n × Fin n)), DisjointPairs P → Disjoint F (coords P) →
+    ∀ t, gramOn (F ∪ coords P) P (i + P.card) (j + P.card) t
+      = 2 ^ P.card * betaOn F i j P.card t := by
+  intro P
+  simp only [betaOn]
+  induction P using Finset.induction_on with
+  | empty =>
+      intro _ _ t
+      simp [coords, gramOn_empty, betaAux_zero]
+  | @insert p P hp ih =>
+      obtain ⟨a, b⟩ := p
+      intro hPd hFP t
+      have hab : a ≠ b := hPd.ne
+      have hsub : DisjointPairs P := hPd.of_insert
+      obtain ⟨haP, hbP⟩ := hPd.notMem_coords hp
+      rw [coords_insert] at hFP
+      simp only [Finset.disjoint_insert_right] at hFP
+      obtain ⟨haF, hbF, hFP'⟩ := hFP
+      have hG : F ∪ coords (insert (a, b) P) = insert a (insert b (F ∪ coords P)) := by
+        rw [coords_insert, Finset.union_insert, Finset.union_insert]
+      have ha : a ∉ F ∪ coords P := by simp [haF, haP]
+      have hb : b ∉ F ∪ coords P := by simp [hbF, hbP]
+      have hPG : coords P ⊆ F ∪ coords P := Finset.subset_union_right
+      have hcard : (insert (a, b) P).card = P.card + 1 := Finset.card_insert_of_notMem hp
+      rw [hG, hcard]
+      cases t with
+      | zero =>
+          rw [show i + (P.card + 1) = (i + P.card) + 1 by ring,
+            show j + (P.card + 1) = (j + P.card) + 1 by ring,
+            gramOn_insert_pair_zero hab ha hb hPG hp, ih hsub hFP' 0, betaAux_zero_step]
+          ring
+      | succ t' =>
+          rw [show i + (P.card + 1) = (i + P.card) + 1 by ring,
+            show j + (P.card + 1) = (j + P.card) + 1 by ring,
+            gramOn_insert_pair hab ha hb hPG hp, ih hsub hFP' t', ih hsub hFP' (t' + 1),
+            betaAux_step]
+          ring
 
 end Delsarte.Hamming
