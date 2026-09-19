@@ -13,6 +13,7 @@ import Delsarte.Hamming.CharQ
 import Delsarte.Hamming.Shell
 import Delsarte.Hamming.FeasibleQ
 import Delsarte.Hamming.Terwilliger
+import Delsarte.Hamming.Positivity
 import Delsarte.Certificate.IntTable
 import Delsarte.Certificate.Verify
 import Delsarte.Certificate.Integer
