@@ -138,6 +138,64 @@ theorem cc_insert_of_notMem_coords {P : Finset (Fin n × Fin n)} {a : Fin n}
   have e2 : p.2 ≠ a := fun h => h2 p ⟨hp, h⟩
   simp [Finset.mem_insert, e1, e2]
 
+/-- The pairs of `P` are non-degenerate and no two of them share a coordinate.
+
+Stated as `PairwiseDisjoint` rather than by hand: that is exactly the hypothesis
+`Finset.card_biUnion` wants, so `card_coords` below is a corollary rather than a
+bridge. -/
+def DisjointPairs (P : Finset (Fin n × Fin n)) : Prop :=
+  (∀ p ∈ P, p.1 ≠ p.2) ∧
+    (P : Set (Fin n × Fin n)).PairwiseDisjoint fun p => ({p.1, p.2} : Finset (Fin n))
+
+theorem coords_eq_biUnion (P : Finset (Fin n × Fin n)) :
+    coords P = P.biUnion fun p => ({p.1, p.2} : Finset (Fin n)) := by
+  ext a
+  simp only [coords, Finset.mem_union, Finset.mem_image, Finset.mem_biUnion,
+    Finset.mem_insert, Finset.mem_singleton]
+  constructor
+  · rintro (⟨p, hp, rfl⟩ | ⟨p, hp, rfl⟩)
+    · exact ⟨p, hp, Or.inl rfl⟩
+    · exact ⟨p, hp, Or.inr rfl⟩
+  · rintro ⟨p, hp, (rfl | rfl)⟩
+    · exact Or.inl ⟨p, hp, rfl⟩
+    · exact Or.inr ⟨p, hp, rfl⟩
+
+/-- `k` disjoint pairs occupy `2k` coordinates. This is the readable form of
+`DisjointPairs`; the definition is the one the proofs consume. -/
+theorem DisjointPairs.card_coords {P : Finset (Fin n × Fin n)} (hP : DisjointPairs P) :
+    (coords P).card = 2 * P.card := by
+  rw [coords_eq_biUnion, Finset.card_biUnion hP.2,
+    Finset.sum_congr rfl fun p hp => Finset.card_pair (hP.1 p hp)]
+  simp [mul_comm]
+
+theorem DisjointPairs.subset {P Q : Finset (Fin n × Fin n)} (hQ : DisjointPairs Q)
+    (h : P ⊆ Q) : DisjointPairs P :=
+  ⟨fun p hp => hQ.1 p (h hp), hQ.2.subset (Finset.coe_subset.2 h)⟩
+
+theorem DisjointPairs.of_insert {p : Fin n × Fin n} {P : Finset (Fin n × Fin n)}
+    (hP : DisjointPairs (insert p P)) : DisjointPairs P :=
+  hP.subset (Finset.subset_insert p P)
+
+theorem DisjointPairs.ne {a b : Fin n} {P : Finset (Fin n × Fin n)}
+    (hP : DisjointPairs (insert (a, b) P)) : a ≠ b :=
+  hP.1 (a, b) (Finset.mem_insert_self _ _)
+
+/-- The coordinates of a freshly inserted pair are new. This is the hypothesis
+`gramOn_insert_pair` consumes, extracted from `DisjointPairs` once. -/
+theorem DisjointPairs.notMem_coords {a b : Fin n} {P : Finset (Fin n × Fin n)}
+    (hP : DisjointPairs (insert (a, b) P)) (hab : (a, b) ∉ P) :
+    a ∉ coords P ∧ b ∉ coords P := by
+  have key : ∀ c : Fin n, (c = a ∨ c = b) → c ∉ coords P := by
+    intro c hc hmem
+    rw [coords_eq_biUnion, Finset.mem_biUnion] at hmem
+    obtain ⟨q, hq, hcq⟩ := hmem
+    have hne : (a, b) ≠ q := fun h => hab (h ▸ hq)
+    have hd := hP.2 (by simp) (by simp [hq]) hne
+    have h1 : c ∈ ({(a, b).1, (a, b).2} : Finset (Fin n)) := by
+      rcases hc with rfl | rfl <;> simp
+    exact (Finset.disjoint_left.1 hd h1) hcq
+  exact ⟨key a (Or.inl rfl), key b (Or.inr rfl)⟩
+
 /-- The left side of the Gram identity, over a ground set `G`.
 
 `G` is the coordinates still in play: the paired ones, `coords P`, together with
