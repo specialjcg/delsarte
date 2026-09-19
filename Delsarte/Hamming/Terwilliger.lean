@@ -7,6 +7,7 @@ import Mathlib.Algebra.BigOperators.Group.Finset.Powerset
 import Mathlib.Algebra.BigOperators.Group.Finset.Sigma
 import Mathlib.Algebra.BigOperators.Ring.Finset
 import Mathlib.Data.Finset.Powerset
+import Mathlib.Data.Finset.Sort
 import Mathlib.Tactic.Ring
 
 /-!
@@ -432,5 +433,102 @@ theorem gramOn_eq_pow_mul_betaOn (F : Finset (Fin n)) (i j : ℕ) :
             gramOn_insert_pair hab ha hb hPG hp, ih hsub hFP' t', ih hsub hFP' (t' + 1),
             betaAux_step]
           ring
+
+/-- The relativised count is the absolute one for the right `n`.
+
+This is where the change of type lives. `multOn` counts inside a `Finset` of
+coordinates; `mult` counts inside `Fin m`. Transporting along
+`Finset.orderEmbOfFin` is what `multOn` was introduced to postpone, and this
+lemma is the single place that pays for it. `F` is never rewritten: the
+embedding's type mentions `#F`, so abstracting `F` would break the motive. -/
+theorem multOn_card (F : Finset (Fin n)) (i j r : ℕ) :
+    multOn F i j r = mult F.card i j r := by
+  classical
+  rw [multOn, mult, multFinset]
+  set e := (F.orderEmbOfFin rfl).toEmbedding with he
+  have hFe : Finset.map e univ = F := Finset.map_orderEmbOfFin_univ F rfl
+  have hmem : ∀ v : Finset (Fin F.card), Finset.map e v ⊆ F := by
+    intro v x hx
+    obtain ⟨a, -, rfl⟩ := Finset.mem_map.1 hx
+    exact Finset.orderEmbOfFin_mem F rfl a
+  have hlift : ∀ v : Finset (Fin n), v ⊆ F → ∃ u : Finset (Fin F.card), Finset.map e u = v := by
+    intro v hv
+    have hv' : v ⊆ Finset.image e univ := by rw [← Finset.map_eq_image, hFe]; exact hv
+    obtain ⟨u, -, hu⟩ := Finset.subset_image_iff.1 hv'
+    exact ⟨u, by rw [Finset.map_eq_image]; exact hu⟩
+  refine (Finset.card_bij
+      (fun q (_ : q ∈ multOnFinset (univ : Finset (Fin F.card)) i j r) =>
+        (q.1.map e, q.2.map e)) ?_ ?_ ?_).symm
+  · rintro ⟨v, w⟩ hq
+    simp only [multOnFinset, Finset.mem_filter, Finset.mem_product,
+      Finset.mem_powersetCard] at hq ⊢
+    obtain ⟨⟨⟨-, hv⟩, ⟨-, hw⟩⟩, hvw⟩ := hq
+    exact ⟨⟨⟨hmem v, by rw [Finset.card_map]; exact hv⟩,
+      ⟨hmem w, by rw [Finset.card_map]; exact hw⟩⟩,
+      by rw [← Finset.map_inter, Finset.card_map]; exact hvw⟩
+  · rintro ⟨v, w⟩ - ⟨v', w'⟩ - h
+    simp only [Prod.mk.injEq] at h
+    exact Prod.ext (Finset.map_injective e h.1) (Finset.map_injective e h.2)
+  · rintro ⟨v, w⟩ hq
+    simp only [multOnFinset, Finset.mem_filter, Finset.mem_product,
+      Finset.mem_powersetCard] at hq
+    obtain ⟨⟨⟨hvF, hv⟩, ⟨hwF, hw⟩⟩, hvw⟩ := hq
+    obtain ⟨u, rfl⟩ := hlift v hvF
+    obtain ⟨z, rfl⟩ := hlift w hwF
+    refine ⟨(u, z), ?_, rfl⟩
+    simp only [multOnFinset, Finset.mem_filter, Finset.mem_product,
+      Finset.mem_powersetCard]
+    rw [Finset.card_map] at hv hw
+    rw [← Finset.map_inter, Finset.card_map] at hvw
+    exact ⟨⟨⟨Finset.subset_univ u, hv⟩, ⟨Finset.subset_univ z, hw⟩⟩, hvw⟩
+
+/-- The bridge from the relativised coefficient to `beta` as the paper defines
+it. The truncated subtractions `i - k` and `j - k` appear here and nowhere
+earlier: `betaOn` is stated in free sizes, `beta` in absolute ones. -/
+theorem betaOn_eq_beta (F : Finset (Fin n)) (i j k t : ℕ) (hF : F.card = n - 2 * k) :
+    betaOn F (i - k) (j - k) k t = beta n i j k t := by
+  simp only [betaOn, beta, betaAux]
+  refine Finset.sum_congr rfl fun r _ => ?_
+  rw [multOn_card, hF]
+
+/-- The Gram identity in the paper's notation, over a ground set split into free
+coordinates `F` and the coordinates of `P`. -/
+theorem gramOn_eq_pow_mul_beta (F : Finset (Fin n)) (P : Finset (Fin n × Fin n))
+    (hP : DisjointPairs P) (hFP : Disjoint F (coords P))
+    (hF : F.card = n - 2 * P.card) (i j t : ℕ) :
+    gramOn (F ∪ coords P) P (i + P.card) (j + P.card) t
+      = 2 ^ P.card * beta n (i + P.card) (j + P.card) P.card t := by
+  rw [gramOn_eq_pow_mul_betaOn F i j P hP hFP t, ← betaOn_eq_beta F _ _ P.card t hF]
+  simp
+
+/-- Over the whole cube, given a witness for the free coordinates. -/
+theorem gram_eq_pow_mul_beta_of_card (F : Finset (Fin n)) (P : Finset (Fin n × Fin n))
+    (hP : DisjointPairs P) (hFP : Disjoint F (coords P))
+    (hF : F.card = n - 2 * P.card) (hk : 2 * P.card ≤ n) (i j t : ℕ) :
+    gram P (i + P.card) (j + P.card) t
+      = 2 ^ P.card * beta n (i + P.card) (j + P.card) P.card t := by
+  have hcard : (F ∪ coords P).card = n := by
+    rw [Finset.card_union_of_disjoint hFP, hF, hP.card_coords]
+    omega
+  have huniv : F ∪ coords P = (univ : Finset (Fin n)) :=
+    Finset.eq_univ_of_card _ (by rw [hcard, Fintype.card_fin])
+  rw [gram, ← huniv]
+  exact gramOn_eq_pow_mul_beta F P hP hFP hF i j t
+
+/-- Schrijver's Gram identity, §4 of `THEOREM1.md`, over the whole cube:
+
+    ∑_{|v| = i+k, |w| = j+k, |v ∧ w| = t} c(v) c(w) = 2^k · β^t_{i+k, j+k, k}
+
+for `k = |P|` pairwise coordinate-disjoint pairs. No witness to supply: the free
+coordinates are the complement of the paired ones. -/
+theorem gram_eq_pow_mul_beta (P : Finset (Fin n × Fin n))
+    (hP : DisjointPairs P) (hk : 2 * P.card ≤ n) (i j t : ℕ) :
+    gram P (i + P.card) (j + P.card) t
+      = 2 ^ P.card * beta n (i + P.card) (j + P.card) P.card t := by
+  have hFP : Disjoint ((univ : Finset (Fin n)) \ coords P) (coords P) := Finset.sdiff_disjoint
+  have hF : ((univ : Finset (Fin n)) \ coords P).card = n - 2 * P.card := by
+    rw [Finset.card_sdiff, Finset.inter_univ, hP.card_coords, Finset.card_univ,
+      Fintype.card_fin]
+  exact gram_eq_pow_mul_beta_of_card _ P hP hFP hF hk i j t
 
 end Delsarte.Hamming
