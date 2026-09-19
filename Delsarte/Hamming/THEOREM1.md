@@ -9,9 +9,10 @@ Reference: A. Schrijver, *New code upper bounds from the Terwilliger algebra and
 semidefinite programming*, IEEE Trans. Inf. Theory **51** (2005) 2859–2866.
 Equation numbers below are that paper's.
 
-Written in English to match the Lean docstrings it is meant to become. Nothing
-here is machine-checked: it is the argument a Lean proof would follow, with the
-two places it does not yet close named in *What is not proved* at the end.
+Written in English to match the Lean docstrings it is meant to become. §4 is now
+machine-checked, in `Delsarte/Hamming/Terwilliger.lean`; the rest is still only
+the argument a Lean proof would follow, and what it does not close is named in
+*What is not proved* at the end.
 
 ## 0. What is being proved, exactly
 
@@ -198,6 +199,30 @@ Steps 1 and 2 are cheap. Step 3 is the one to start with. Step 4 is bookkeeping
 against `Delsarte/SDP/Schrijver19_6.lean` and cannot be attempted before the
 generator's conventions are pinned down in a test.
 
+**State.** Step 3 is formalized in `Delsarte/Hamming/Terwilliger.lean`, and
+closed:
+
+* `gramOn_insert_pair`, `gramOn_insert_pair_zero` — peeling one coordinate pair
+  off the Gram sum leaves `2·g(t) − 2·g(t+1)`. The sixteen traces of `(v, w)` on
+  the pair reduce to four, with signs `+ − − +`. The `t = 0` case is stated
+  apart: written `t − 1`, truncated subtraction on `ℕ` would silently readmit
+  the two agreeing terms, which are empty there.
+* `betaAux_step` — the same recurrence on the coefficient side: Pascal's
+  identity, with the `r = t+1` term split off because the two sums do not range
+  over the same set.
+* `gramOn_eq_pow_mul_betaOn` — the induction on `P`, stated in the *free* sizes
+  `i` and `j`, so no subtraction is truncated and no type changes.
+* `multOn_card` — the transport along `Finset.orderEmbOfFin`. This is the single
+  place that pays for the change of type, which stating §4 in `beta` forces.
+* `gram_eq_pow_mul_beta` — §4 over the whole cube, in the paper's notation, for
+  `k = |P|` pairwise coordinate-disjoint pairs and `2k ≤ n`.
+
+`check_beta.py` still enumerates all `2ⁿ` subsets for `n ≤ 10`. It is now a
+second, independent check rather than the only evidence.
+
+Steps 1, 2 and 4 remain untouched, so **Theorem 1 itself is not proved**: §4 is
+one of its four ingredients.
+
 ## 6. What is not proved
 
 * **`(7) = (7')`.** Checked as integers for every `(n,i,j,k,t)` with `n ≤ 24` by
@@ -205,10 +230,7 @@ generator's conventions are pinned down in a test.
   check, not a derivation. It is not on the critical path — `β` is *defined* by
   (7') — but anyone comparing against the paper needs to know it is an
   unverified bridge to the paper's notation.
-* **The Gram identity beyond brute force.** `check_beta.py` enumerates all `2ⁿ`
-  subsets for `n ≤ 10`. §4 is a proof for all `n`; the code is a check for small
-  `n`. Neither is Lean.
-* **Everything in §5.** No line of this is formalized. `A_19_6_le_of_relaxation`
-  still carries `hrelax` as a named hypothesis, and the module docstring of
+* **Steps 1, 2 and 4 of §5.** Not formalized. `A_19_6_le_of_relaxation` still
+  carries `hrelax` as a named hypothesis, and the module docstring of
   `Delsarte/Certificate/Schrijver.lean` says so.
 * **Constraints (20)**, issue #44. Independent of everything above.

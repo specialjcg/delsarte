@@ -21,7 +21,8 @@ Fix `k` disjoint pairs of coordinates and weight a subset `v` by
 
 `cc P v = ∏_{(a,b) ∈ P} ([a ∈ v] - [b ∈ v])`,
 
-which vanishes unless `v` meets every pair exactly once. The identity to prove is
+which vanishes unless `v` meets every pair exactly once. The identity, proved
+below as `gram_eq_pow_mul_beta`, is
 
 `∑_{|v|=i, |w|=j, |v ∩ w|=t} cc P v * cc P w = 2^k * beta n i j k t`,
 
