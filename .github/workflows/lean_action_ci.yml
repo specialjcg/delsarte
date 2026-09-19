@@ -67,3 +67,13 @@ jobs:
       - name: Check Schrijver's block coefficients
         run: |
           python3 tools/check_beta.py
+
+      # The sum-of-squares identity of section 1, proved in
+      # `Delsarte/Hamming/Positivity.lean`. The Lean proof covers every `n`, so
+      # this adds no coverage; it is here so that the two negative controls keep
+      # running. A checker that never rejects has proved nothing, and the first
+      # of these controls did misfire silently until the weights were drawn away
+      # from zero.
+      - name: Check the section 1 sum-of-squares identity
+        run: |
+          python3 tools/check_quadform.py

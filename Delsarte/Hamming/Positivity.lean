@@ -11,7 +11,8 @@ import Mathlib.Data.ZMod.Defs
 # The quadratic form behind Schrijver's blocks
 
 Issue #45. `Delsarte/Hamming/THEOREM1.md` is the argument on paper; this file is
-steps 1 and 2 of its §5, the two that never mention a block.
+step 1 of its §5 and the positivity half of step 2 — the part that never mentions
+a block.
 
 The matrix of (19) is a sum of rank-one matrices `χ_z χ_zᵀ`, where `χ_z` is the
 0/1 vector `v ↦ [z + v ∈ C]`. Its quadratic form is therefore a sum of squares,
@@ -26,10 +27,15 @@ complement gives the second, so both are one lemma.
 
 It does not prove Theorem 1. §5 lists four steps — these two, the Gram identity
 (proved in `Delsarte/Hamming/Terwilliger.lean`), and the bridge to the encoded
-program. Between them sits the assembly of §3, which builds the vectors `u_i`
-and identifies `u_iᵀ M u_j` with a block entry; §5 does not list it as a step,
-but it is not contained in any of the four either. So `A_19_6_le_of_relaxation`
-still carries `hrelax`, and will until that assembly and the bridge are done.
+program.
+
+Three things are missing, not one. The bridge. The other half of §2: that `M̃` is
+`Sₙ`-invariant, hence equal to `Σ x^t_{i,j} M^t_{i,j}`, which is what makes the
+`x^t_{i,j}` the program's variables at all — nothing below mentions an orbit. And
+the assembly of §3, which builds the vectors `u_i` and identifies `u_iᵀ M̃ u_j`
+with a block entry; §5 does not list it as a step, but it is not contained in any
+of the four either. So `A_19_6_le_of_relaxation` still carries `hrelax`, and will
+until all three are done.
 
 ## Characteristic two
 
@@ -110,7 +116,8 @@ theorem quadForm_nonneg (S C : Code n 2) (a : Word n 2 → ℚ) :
 
 /-- Relabelling the ambient space by a bijection carries the form at `a` to the
 form at `a ∘ e`. Applied to a coordinate permutation this is the statement that
-`P_σ` is orthogonal, which is all §2 uses about `Sₙ`. -/
+`P_σ` is orthogonal, which is all the positivity half of §2 uses about `Sₙ`. The
+other half, the orbit decomposition, needs far more and is not here. -/
 theorem quadForm_comp (S C : Code n 2) (a : Word n 2 → ℚ) (e : Word n 2 ≃ Word n 2) :
     ∑ v, ∑ w, a (e v) * a (e w) * gramMat S C (e v) (e w)
       = ∑ v, ∑ w, a v * a w * gramMat S C v w := by
@@ -118,7 +125,8 @@ theorem quadForm_comp (S C : Code n 2) (a : Word n 2 → ℚ) (e : Word n 2 ≃ 
   refine Finset.sum_congr rfl fun v _ => ?_
   conv_rhs => rw [← Equiv.sum_comp e fun w => a (e v) * a w * gramMat S C (e v) w]
 
-/-- **Step 2.** Any nonnegative combination of these forms is nonnegative. The
+/-- **Step 2, positivity half.** Any nonnegative combination of these forms is
+nonnegative. The
 average over `Sₙ` of §2 is the case where `T` is the group, `c` is `1 / n!` and
 `b σ` is `a ∘ P_σ`; the proof needs no group theory, only that the weights are
 nonnegative. -/
