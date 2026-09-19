@@ -195,7 +195,8 @@ bridge to the encoded program once, by calculation.
    (`a_i·a_j`), the conjugation would preserve positivity anyway, but it is not
    present in the certificate and does not have to be modelled.
 
-Steps 1 and 2 are cheap. Step 3 is the one to start with. Step 4 is bookkeeping
+Steps 1 and 2 were expected to be cheap and step 3 to be the substantial one;
+that plan held, and what follows reports the outcome. Step 4 is bookkeeping
 against `Delsarte/SDP/Schrijver19_6.lean` and cannot be attempted before the
 generator's conventions are pinned down in a test.
 
@@ -220,8 +221,32 @@ closed:
 `check_beta.py` still enumerates all `2ⁿ` subsets for `n ≤ 10`. It is now a
 second, independent check rather than the only evidence.
 
-Steps 1, 2 and 4 remain untouched, so **Theorem 1 itself is not proved**: §4 is
-one of its four ingredients.
+Step 1, and the positivity half of step 2, are formalized in
+`Delsarte/Hamming/Positivity.lean`:
+
+* `quadForm_eq_sum_sq`, `quadForm_nonneg` — the matrix of (19) written as a sum
+  of rank-one `χχᵀ`, hence a sum of squares. The sum over translations runs over
+  an arbitrary set and no proof looks at it, so `S = C` and its complement are
+  one lemma rather than two.
+* `quadForm_comp`, `sum_smul_quadForm_nonneg` — the positivity half of §2.
+  Relabelling the ambient space by a bijection preserves the form, and a
+  nonnegative combination of nonnegative forms is nonnegative. No group theory is
+  used, only that the weights are nonnegative.
+
+The other half of §2 is **not** formalized: that `M̃` is `Sₙ`-invariant, hence
+equal to `Σ x^t_{i,j} M^t_{i,j}`, which is what makes the `x^t_{i,j}` the
+program's variables at all. Nothing in `Positivity.lean` mentions an orbit. So
+"step 2" is done in the sense of positivity and not in the sense of the change of
+variables that §3 then consumes.
+
+`tools/check_quadform.py` pre-checks the §1 identity in exact rational
+arithmetic, with two negative controls: a perturbed entry must break it, and an
+arbitrary symmetric matrix must be able to drive the form negative.
+
+What remains is step 4, the orbit decomposition of §2, and the assembly of §3 —
+the vectors `u_i`, and the identification of `u_iᵀ M̃ u_j` with a block entry. §5
+enumerates four steps and that assembly is none of them, so **Theorem 1 itself is
+not proved**.
 
 ## 6. What is not proved
 
@@ -230,7 +255,12 @@ one of its four ingredients.
   check, not a derivation. It is not on the critical path — `β` is *defined* by
   (7') — but anyone comparing against the paper needs to know it is an
   unverified bridge to the paper's notation.
-* **Steps 1, 2 and 4 of §5.** Not formalized. `A_19_6_le_of_relaxation` still
-  carries `hrelax` as a named hypothesis, and the module docstring of
-  `Delsarte/Certificate/Schrijver.lean` says so.
+* **Step 4 of §5, the orbit decomposition of §2, and the assembly of §3.** Not
+  formalized. The orbit decomposition is what makes the `x^t_{i,j}` the program's
+  variables at all; §5 counts it inside step 2, but only the positivity half of
+  that step is proved. The assembly — the vectors `u_i`, and
+  `u_iᵀ M̃ u_j = 2^k (B_k)_{i,j}` — is needed and is none of the four steps §5
+  lists; that enumeration is incomplete, not the proof.
+  `A_19_6_le_of_relaxation` still carries `hrelax` as a named hypothesis, and the
+  module docstring of `Delsarte/Certificate/Schrijver.lean` says so.
 * **Constraints (20)**, issue #44. Independent of everything above.
