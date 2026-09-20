@@ -50,6 +50,30 @@ What was checked independently of any solver:
     reproduce it, and it is not a control.
   * the model never excludes an actual code: the point z = lambda / |C| of a
     real code satisfies every constraint, with objective |C| (`--controls`).
+    Tested again on 2026-09-20 with sharper witnesses: a three-word code of
+    distance exactly 16 is feasible at (24,16), (27,16) and (28,16), objective
+    exactly 3, no stray orbit; and stripped of its PSD blocks the program is
+    still a valid relaxation, giving 8387446 at (24,4) against a known code of
+    327680.  So neither the affine rows nor the blocks exclude real codes.
+
+What is NOT checked anywhere, and it is the heaviest defect in this file.
+ACCEPT filters FEASIBILITY.  What makes a value an upper bound is OPTIMALITY,
+and nothing measures it.  (22) is a maximisation, so a feasible but sub-optimal
+point carries a value BELOW the optimum -- not an upper bound at all -- and it
+passes every feasibility check here without touching one.  Measured 2026-09-20
+on the 63 closed cells with n >= 14, where the true value is known exactly:
+twelve came back under it, several with status 'optimal' and violations at
+1e-17.
+
+    A(28,16)  1.79 against 8        A(22,12)   6.79 against 12
+    A(27,16)  3.09 against 6        A(24,8) 2963.69 against 4096
+
+A(22,2,12) <= 12 and A(28,2,16) <= 8 are proved in
+`Delsarte/Certificate/Table8.lean` by the linear program and checked by the
+kernel, so the LP is right and it is this float measurement that sinks below the
+truth.  The guard is now in `controls`, where it fails; it is kept failing,
+because a control switched off for rejecting is not a control.  None of this
+reaches `schrijver_cert.py`, which rebuilds a dual and trusts no float value.
 
 Measured on the default program, Clarabel with SCS as fallback:
 
@@ -77,11 +101,23 @@ that was wrong.  With `even=False`, A(22,10) solves cleanly to 87.97.  The
 genuine numerical wall is narrower and it announces itself: at (21,10) Clarabel
 raises SolverError rather than returning a wrong value, and SCS gives 51.81.
 
+That last sentence is itself too kind, and 2026-09-20 disproved it: the wall
+does NOT always announce itself.  Clarabel does raise SolverError at (22,10),
+(27,12) and (28,12) -- but elsewhere it returns values far below the truth while
+reporting status 'optimal' at a violation of 1e-17, which is the silent failure
+the sentence denied.  See the optimality paragraph at the top.
+
 Requires cvxpy and clarabel (kept out of the repository; a scratch venv will
 do).  Usage:
 
     schrijver_sdp.py n d          one entry
-    schrijver_sdp.py --controls   anchors, Table I rows, real codes feasible
+    schrijver_sdp.py --controls   anchors, Table I rows, real codes feasible,
+                                  and the optimality guard.  FAILS as of
+                                  2026-09-20, and nothing in CI runs it, so
+                                  nobody would have been told: the failures are
+                                  Table I A(19,6) on a residual of 1.8e-05, and
+                                  the four closed cells of the optimality guard.
+                                  Running it is currently a manual act.
     schrijver_sdp.py ... --even   the restricted program, kept only to show
                                   that the controls reject it
 """
@@ -245,6 +281,16 @@ SOLVER_OPTS = {
 # hide them.  The remedy is arbitrary precision (SDPA-GMP), not more
 # iterations.  It is not a size effect: (19,6) has 156 variables and settles at
 # 2.2e-7, better than (19,8) with 86.  Why these two resist is not understood.
+#
+# Re-measured 2026-09-20 with cvxpy 1.9.3 / clarabel 0.11.1 / scs 3.3.1, and the
+# descriptions below are wrong for those versions.  SCS does not "diverge to the
+# LP value": at (19,6) it returns 1154.11, BELOW the LP value of 1289, at a
+# violation of 7.0, and it wrecks (20,8) -- 211.15 at 1.7e-01 where Clarabel
+# settles at 274.09 and 3.0e-08.  It is not a usable fallback here; the two-solver
+# strategy no longer protects anything, and these runs were made with Clarabel
+# alone.  At (22,10) Clarabel does not stall either, it raises SolverError, as it
+# also does at (27,12) and (28,12).  The entries are left keyed as they are
+# because the cells are still uncontrolled; only the reasons have changed.
 UNCONTROLLED = {
     (19, 8): "Clarabel stalls at 1.7e-5, SCS diverges to the LP value",
     (22, 10): "Clarabel stalls at 2.8e-6",
@@ -402,6 +448,23 @@ def controls(even=False):
         obj, viol, stray = code_point(n, d, code, even)
         line(abs(obj - len(code)) < 1e-9 and viol < 1e-8 and not stray,
              f"code of {len(code)} words feasible at ({n},{d}):  obj {obj:.6f}  viol {viol:.1e}")
+
+    # The guard that was missing, and the one that matters most. Everything above
+    # measures feasibility; none of it measured optimality. On a maximisation a
+    # feasible but sub-optimal point carries a value BELOW the optimum, so it is
+    # not an upper bound, and it passes every check above. These four cells are
+    # CLOSED: the value is known exactly, so there is nothing soft to argue with.
+    # They fail today, by up to 78% at A(28,16), and they are kept failing.
+    for n, d, exact in [(19, 10, 20), (22, 12, 12), (24, 16, 4), (28, 16, 8)]:
+        try:
+            v, _, status, viol = sdp_value(n, d, even=even)
+        except Exception as exc:
+            line(False, f"A({n},{d}) = {exact} exactly: no point "
+                        f"({type(exc).__name__})")
+            continue
+        line(v >= exact * (1 - 1e-3),
+             f"A({n},{d}) >= {exact} exactly:  SDP {v:.4f}  {status} "
+             f"viol {viol:.1e}")
 
     print("controls:", "all passed" if ok else "FAILED")
     return ok

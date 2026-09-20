@@ -37,6 +37,27 @@ Pipeline:
    positive one on (0,i,i) goes into `x^0_{i,0} <= 1`, which costs bound.
 6. Independent exact check of every equality and sign.
 
+Replayed away from the machine that produced it, on 2026-09-20, with cvxpy
+1.9.3 / clarabel 0.11.1 / scs 3.3.1 -- none of which existed when the committed
+numbers were taken:
+
+    A(12,6)   bound 24.000000046    committed 24.000000023    -> A(12,6) <= 24
+    A(19,6)   bound 1280.037619505  committed 1280.036657727  -> A(19,6) <= 1280
+
+The float points differ, the rounding differs, and the bound is the same. That
+is the property this file exists for and it had never been checked anywhere but
+on the author's machine; both negative controls fired in both replays. Note what
+it does *not* say: the certified value is an upper bound on the program's
+optimum, and `A_19_6_le_of_relaxation` still carries `hrelax`, the unproved
+claim that the encoded program relaxes A(n, d) at all (issues #44, #45).
+
+The repair is what makes this robust, and it is worth stating how far it
+reaches: it has been driven from starting points whose residual was 1.7e-01 and
+8.7e+00 and still returned a valid certificate, by raising the bound -- 33.39 to
+207.05 at (27,12), 88.74 to 316.74 at (28,12). A bad float point costs bound
+quality, not validity. It is not unbreakable: at (18,4), (17,4), (19,4) and
+(25,6) the correction LP fails outright rather than returning something wrong.
+
 Usage:
 
     schrijver_cert.py n d [--even]    certificate and controls

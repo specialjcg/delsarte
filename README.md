@@ -226,6 +226,46 @@ réel satisfaisant chaque contrainte :
 Les bornes de Schrijver 2005 ont toutes été battues depuis. Les certifier
 rendrait auditable une borne historique, pas la meilleure connue.
 
+#### Ce que le solveur mesure, et ce qu'il ne mesure pas
+
+Mesuré le 20 septembre 2026, et c'est le défaut le plus lourd que porte cette
+partie du dépôt. `ACCEPT = 1e-6` filtre la **faisabilité**. Ce qui fait d'une
+valeur une borne supérieure, c'est l'**optimalité**, et *rien ne la mesure*. Le
+programme est un maximum : un point faisable mais sous-optimal porte une valeur
+**inférieure** à l'optimum, donc n'est pas une borne du tout — et il traverse
+tous les contrôles de faisabilité sans en heurter un seul.
+
+Ce n'est pas une inquiétude théorique. Sur les 63 cellules **fermées** avec
+`n ≥ 14`, où la vraie valeur est connue exactement, **douze** reviennent en
+dessous, plusieurs avec le statut `optimal` et une violation à 1e-17 :
+
+| entrée | rendu | vraie valeur | déficit |
+|---|---|---|---|
+| `A(28,16)` | 1,79 | **8** | 78 % |
+| `A(27,16)` | 3,09 | **6** | 48 % |
+| `A(22,12)` | 6,79 | **12** | 43 % |
+| `A(24,8)` | 2 963,69 | **4 096** | 28 % |
+
+`A(22,2,12) ≤ 12` et `A(28,2,16) ≤ 8` sont pourtant démontrées dans
+`Delsarte/Certificate/Table8.lean`, par le programme linéaire et vérifiées par le
+noyau. Le LP est juste ; c'est la mesure SDP flottante qui descend sous la
+vérité.
+
+**Le modèle n'est pas en cause, et il a été testé pour le dire.** Les 7 625
+contraintes affines forment bien une relaxation valide — à `A(24,4)` elles seules
+donnent 8 387 446, très au-dessus des 327 680 d'un code connu. Et les blocs
+n'excluent pas les codes réels : un témoin à trois mots de distance exactement 16
+est faisable à `(24,16)`, `(27,16)` et `(28,16)`, objectif exactement 3, zéro
+orbite parasite. L'optimum y est donc `≥ 3`, alors que le solveur rend 2,34 et
+1,79 en se déclarant `optimal`. **C'est le solveur qui ment, pas le programme.**
+
+Le garde-fou manquant tient en deux lignes — comparer la valeur rendue à la
+taille d'un code réel — et il est désormais dans `controls()`, où il **échoue**.
+Il est conservé en échec : un contrôle qu'on désactive parce qu'il rejette n'est
+pas un contrôle. Rien de tout cela n'atteint les certificats exacts de
+`tools/schrijver_cert.py`, qui reconstruisent un dual et ne dépendent d'aucune
+valeur flottante.
+
 Une version antérieure de ce tableau donnait 142,447 et 274,072, qui étaient les
 chiffres du programme *restreint* — assez proches pour passer pour la même
 mesure, et ce n'en était pas une. Les valeurs ci-dessus sont celles du programme
