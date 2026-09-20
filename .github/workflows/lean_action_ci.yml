@@ -51,6 +51,17 @@ jobs:
         with:
           python-version: '3.12'
 
+      # The cross-check reads its list of claims out of the Lean sources, so a
+      # parser that quietly stopped recognising a declaration would shrink that
+      # list and every check below would go on passing while covering less. This
+      # step fails if any of the thirty-three cells the list held when it was
+      # still maintained by hand stops being extracted, or if the three statement
+      # shapes that were near-misses when the parser was written -- a cast to Q,
+      # an equality, a non-binary alphabet -- stop being recognised.
+      - name: Check the claim list is still derived from Lean
+        run: |
+          python3 tools/lean_claims.py --check
+
       # Fails if a bound proved here drops below a published upper bound. That
       # would be an improvement on the literature, or -- far more often -- a bug
       # in the certificate pipeline. Either way nobody should learn it from a

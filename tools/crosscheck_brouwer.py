@@ -46,45 +46,16 @@ import html
 import re
 import sys
 
+import lean_claims
+
 HERE = Path(__file__).resolve().parent
 DEFAULT_TABLE = HERE / "reference" / "brouwer-binary-2026-09-16.html"
 
-# (n, d, bound, where) exactly as stated in the repo.
-CLAIMS = [
-    (5, 3, 4, "Certificate/Bounds.lean:73"),
-    (5, 3, 6, "Certificate/Verify.lean:194"),
-    (13, 5, 64, "Certificate/Bounds.lean:102"),
-    (8, 4, 16, "Certificate/Table1.lean:49"),
-    (12, 6, 24, "Certificate/Table1.lean:73"),
-    (14, 5, 128, "Certificate/Table1.lean:98"),
-    (24, 8, 4096, "Certificate/Table1.lean:126"),
-    (23, 7, 4096, "Certificate/Golay.lean:53"),
-    (6, 3, 8, "Certificate/Table3.lean:49"),
-    (10, 5, 12, "Certificate/Table3.lean:73"),
-    (12, 5, 40, "Certificate/Table3.lean:98"),
-    (15, 6, 128, "Certificate/Table3.lean:123"),
-    (7, 4, 8, "Certificate/Table2.lean:49"),
-    (11, 5, 24, "Certificate/Table2.lean:73"),
-    (13, 3, 512, "Certificate/Table2.lean:99"),
-    (15, 5, 256, "Certificate/Table2.lean:124"),
-    (16, 4, 2048, "Certificate/Table4.lean:64"),
-    (16, 6, 256, "Certificate/Table4.lean:89"),
-    (16, 8, 32, "Certificate/Table4.lean:113"),
-    (21, 7, 1024, "Certificate/Table4.lean:138"),
-    (22, 7, 2048, "Certificate/Table4.lean:163"),
-    (28, 12, 288, "Certificate/Table6.lean:84"),
-    (18, 4, 6553, "Certificate/Table6.lean:111"),
-    (23, 4, 174762, "Certificate/Table6.lean:140"),
-    (26, 4, 1198372, "Certificate/Table6.lean:170"),
-    (19, 4, 13106, "Certificate/Table6.lean:187"),
-    (20, 4, 26212, "Certificate/Table6.lean:193"),
-    (24, 4, 349524, "Certificate/Table6.lean:199"),
-    (27, 4, 2396744, "Certificate/Table6.lean:205"),
-    (28, 4, 4793488, "Certificate/Table6.lean:211"),
-    (26, 5, 163840, "Certificate/Table5.lean:70"),
-    (31, 3, 67108864, "Certificate/Table5.lean:99"),
-    (32, 4, 67108864, "Certificate/Table5.lean:129"),
-]
+# Every bound this repository proves, read out of the Lean sources rather than
+# transcribed. A hand-maintained list cannot report a cell that is proved and was
+# never typed in, which is the one direction of error that matters here: it makes
+# the cross-check silent exactly where silence looks like agreement.
+CLAIMS = lean_claims.binary()
 
 # The table stops at n = 28. These two are settled instead by the perfect
 # Hamming code, which `off_table` recomputes rather than asserts.

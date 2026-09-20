@@ -183,6 +183,15 @@ meilleure borne supérieure connue d'une entrée ouverte — minorant 178 — et
 la seule ligne où ce dépôt en dit autant que la littérature sur une entrée non
 résolue.
 
+`Table7.lean` et `Table8.lean` en ajoutent vingt-huit, seize de borne au moins
+dix — de `A(11,2,6) ≤ 12` à `A(23,2,8) ≤ 2048` — et douze plus petites. Toutes
+égalent la borne publiée, **aucune n'améliore quoi que ce soit** : ce ne sont pas
+des résultats, c'est de la couverture. Elles manquaient pour une raison sans
+rapport avec la difficulté — la liste des bornes était saisie à la main, donc rien
+ne signalait leur absence. Ce sont exactement les cellules où l'optimum exact du
+programme linéaire est déjà entier ; ce qui reste dehors en est exclu par la
+non-intégralité de cet optimum, non par le coût de la vérification.
+
 Le pas manquant n'était pas le LP. L'optimum en `n = 18`, `d = 4` vaut
 `32768/5 = 6553,6`, et aucun vecteur dual n'atteint `6553` : c'est
 l'**intégralité de `A`** qui conclut. `Delsarte/Certificate/Floor.lean` ajoute la
@@ -291,6 +300,9 @@ historique : Brouwer donne aujourd'hui 1237. Voir
 | **`A(28,2,12) ≤ 288`** — entrée ouverte, égale la meilleure borne connue | **démontré** — `Delsarte/Certificate/Table6.lean` |
 | Huit autres entrées ouvertes, bornes plus faibles que la littérature | **démontré** — `Delsarte/Certificate/Table6.lean` |
 | Contrôles négatifs sur les entrées ouvertes (trois refus) | **démontré** — `Delsarte/Certificate/Table6.lean` |
+| Seize cellules à optimum entier, `A(11,2,6) ≤ 12` à `A(23,2,8) ≤ 2048` | **démontré** — `Delsarte/Certificate/Table7.lean` |
+| Douze petites cellules à optimum entier, `A ≤ 4` à `A ≤ 8` | **démontré** — `Delsarte/Certificate/Table8.lean` |
+| Liste des bornes lue dans les sources Lean, non saisie à la main | **rejoué en CI** — `tools/lean_claims.py` |
 | **Kissing number en dimension 24 : `= 196560`** | **démontré** — `Delsarte/Lattice/Separation.lean` |
 | Poids du Golay étendu tous multiples de 4, octades d'intersection paire | **démontré** — `Delsarte/Code/Golay.lean` |
 | Codes linéaires binaires : distance = poids, cardinal, minoration de `A` | **démontré** — `Delsarte/Code/Linear.lean` |
@@ -315,10 +327,21 @@ majorations deviennent des **égalités**, `A(23,2,7) = 4096`, `A(24,2,8) = 4096
 et `A(8,2,4) = 16`. Ce sont les premières égalités du côté combinatoire ; le
 dépôt n'écrivait jusque-là que des `≤` faute de code construit.
 
-Ces bornes ont été confrontées à la table de Brouwer le 16 septembre 2026, et
-aucune ne la contredit : sur trente-trois énoncés binaires, vingt-deux égalent la
-meilleure borne supérieure publiée, onze restent au-dessus, aucune ne passe en
-dessous. Une borne qui passerait en dessous serait une amélioration sur la
+Ces bornes sont confrontées à une copie de la table de Brouwer figée au
+16 septembre 2026, et aucune ne la contredit : sur soixante-quatre énoncés
+binaires — soixante et une cellules distinctes, trois d'entre elles comptées
+deux fois parce que `Code/Golay.lean` démontre une égalité là où un certificat
+donne déjà une majoration — cinquante-trois égalent la meilleure borne
+supérieure publiée, onze restent au-dessus, aucune ne passe en dessous.
+
+Cette liste n'est plus tenue à la main. Elle l'a été jusqu'au 20 septembre 2026,
+et c'était le défaut de fond : une liste saisie ne peut pas signaler une borne
+que le dépôt démontre et que personne n'a recopiée, c'est-à-dire qu'elle se tait
+exactement là où le silence ressemble à un accord. `tools/lean_claims.py` la lit
+désormais dans les sources Lean. Le remplacement a son propre risque, opposé : un
+parseur qui cesserait discrètement de reconnaître une déclaration raccourcirait
+la liste sans rien casser. Les trente-trois cellules d'alors sont donc gelées
+dans l'extracteur et la CI échoue si l'une cesse d'être extraite. Une borne qui passerait en dessous serait une amélioration sur la
 littérature, ou bien — nettement plus souvent — un défaut dans la chaîne de
 certificats ; dans les deux cas, ce n'est pas à un relecteur de le découvrir. La
 comparaison est rejouée par `tools/crosscheck_brouwer.py` contre une copie figée
@@ -398,7 +421,7 @@ abordable. Aucun `native_decide` : `#print axioms` ne donne toujours que
 `propext`, `Classical.choice`, `Quot.sound`.
 
 Les déclarations de ces tables sont **générées** par le solveur puis revérifiées
-par Lean, parce que recopier vingt certificats à la main est le bon moyen
+par Lean, parce que recopier des dizaines de certificats à la main est le bon moyen
 d'introduire une faute qu'aucun théorème n'attraperait : un `y` erroné est
 généralement irréalisable, mais il peut aussi être réalisable et démontrer une
 borne *différente*, plus faible, sans que personne le voie.
@@ -649,7 +672,17 @@ lake build
 ```
 
 Reconstruire toute la bibliothèque, mathlib en cache : **11 min 06 s**
-(3329 jobs), mesuré le 20 septembre 2026 en supprimant `.lake/build`.
+(3329 jobs), mesuré le 20 septembre 2026 en supprimant `.lake/build`. Le dépôt
+compte 3331 jobs depuis `Table7.lean` et `Table8.lean` ; leur coût n'a été mesuré
+qu'en incrémental — 7,1 s et 4,6 s — et le chiffre complet n'a pas été refait, ce
+qui est dit ici plutôt que corrigé à vue.
+
+Le coût d'un certificat a été mesuré séparément, parce que la crainte qu'il
+explose est ce qui avait figé ces tables : sur un fichier ne contenant que les
+imports, 2,44 s et 3,42 Go ; avec quatre certificats dont le pire dénominateur du
+dépôt (47 286) et le plus grand `n`, 4,74 s et 3,51 Go. Soit **2,3 s et 86 Mo
+pour quatre**. Les 3,4 Go sont le coût d'import de mathlib, pas celui des
+certificats.
 
 Ce paragraphe affichait « ~67 s (2409 jobs) » et énonçait un seuil d'alerte à
 deux minutes. Le seuil était franchi d'un facteur cinq sans que rien ne le

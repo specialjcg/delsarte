@@ -41,6 +41,8 @@ import Delsarte.Certificate.Table3
 import Delsarte.Certificate.Table4
 import Delsarte.Certificate.Table5
 import Delsarte.Certificate.Table6
+import Delsarte.Certificate.Table7
+import Delsarte.Certificate.Table8
 import Delsarte.Certificate.Table
 import Delsarte.Code.Golay
 import Delsarte.Code.Octad
