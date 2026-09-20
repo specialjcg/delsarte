@@ -205,19 +205,39 @@ vérifié par le noyau, sa validité comme relaxation ne l'est pas encore (voir
 plus bas).
 
 Mesure préalable, par `tools/schrijver_sdp.py` — flottant, hors base de
-confiance ; formule des blocs vérifiée spectralement à `n = 6`, modèle vérifié
-sur des codes réels :
+confiance ; modèle vérifié sur des codes réels, le point `z = λ / |C|` d'un code
+réel satisfaisant chaque contrainte :
 
 | entrée | Delsarte | SDP mesuré | Schrijver 2005 | meilleure connue (Brouwer) |
 |---|---|---|---|---|
 | `A(19,6)` | 1 289,48 | 1 280,036 | 1 280 | 1 237 |
-| `A(19,8)` | 145,30 | 142,447 | 142 | **128**, exacte |
-| `A(20,8)` | 290,59 | 274,072 | 274 | **256**, exacte |
+| `A(19,8)` | 145,30 | 142,446 | 142 | **128**, exacte |
+| `A(20,8)` | 290,59 | 274,086 | 274 | **256**, exacte |
 
 Les bornes de Schrijver 2005 ont toutes été battues depuis. Les certifier
-rendrait auditable une borne historique, pas la meilleure connue. Au-delà de
-`n = 20`, le solveur échoue : il annonce `A(22,10) ≤ 5,98` alors qu'un code de
-8 mots est un point faisable du modèle.
+rendrait auditable une borne historique, pas la meilleure connue.
+
+Une version antérieure de ce tableau donnait 142,447 et 274,072, qui étaient les
+chiffres du programme *restreint* — assez proches pour passer pour la même
+mesure, et ce n'en était pas une. Les valeurs ci-dessus sont celles du programme
+par défaut, le seul valable pour tout code.
+
+Le mur numérique est plus étroit que ce paragraphe n'annonçait, et il se
+signale : à `(21,10)` Clarabel lève `SolverError` plutôt que de rendre une
+valeur fausse, et SCS donne 51,81. Une version antérieure imputait au solveur
+`A(22,10) ≤ 5,98` alors qu'un code de 64 mots existe ; c'était en réalité la
+réduction aux poids pairs, dont `tools/schrijver_sdp.py` documente qu'elle
+n'est **pas correcte** telle qu'implémentée — elle rend des bornes *sous* la
+vraie valeur, ce qui n'est pas une borne faible mais une borne fausse. Avec
+`even=False`, `A(22,10)` converge proprement à 87,97.
+
+La formule des blocs ne repose plus sur une comparaison spectrale. Une version
+antérieure l'annonçait « vérifiée spectralement à `n = 6` » à 3e-14 : cette
+comparaison a été faite une fois, à la main, jamais committée, et aucun fichier
+du dépôt ne la rejoue — ce n'était pas un contrôle. Ce qui la remplace est plus
+fort. `tools/check_beta.py` rejoue `β` contre (7) en entiers exacts jusqu'à
+`n = 24` et l'identité de Gram jusqu'à `n = 10`, avec deux contrôles négatifs,
+en CI ; et `gram_eq_pow_mul_beta` démontre cette identité en Lean pour tout `n`.
 
 `A(19,6) ≤ 1280` est vérifié par le noyau **sous hypothèse** : le programme
 encodé est une relaxation de Schrijver (non démontré, #44, #45). Borne
@@ -277,6 +297,11 @@ historique : Brouwer donne aujourd'hui 1237. Voir
 | **`A(23,2,7) = 4096`** — Golay binaire `[23,12,7]` | **démontré** — `Delsarte/Code/Golay.lean` |
 | **`A(24,2,8) = 4096`** — Golay étendu `[24,12,8]` | **démontré** — `Delsarte/Code/Golay.lean` |
 | **`A(8,2,4) = 16`** — Hamming étendu `[8,4,4]` | **démontré** — `Delsarte/Code/Golay.lean` |
+| Identité de Gram de Schrijver (§4 du théorème 1), tout `n` | **démontré** — `Delsarte/Hamming/Terwilliger.lean` |
+| Forme quadratique des blocs (19) comme somme de carrés : étape 1, et moitié *positivité* de l'étape 2 | **démontré** — `Delsarte/Hamming/Positivity.lean` |
+| Décomposition en orbites `M̃ = Σ x^t_{i,j} M^t_{i,j}` (seconde moitié de l'étape 2) | **non démontré** — #45 |
+| **Théorème 1 de Schrijver** : blocs (19) PSD pour tout code | **non démontré** — #45 ; `A_19_6_le_of_relaxation` porte toujours `hrelax` |
+| **Contraintes (20) de Schrijver** | **non démontré** — #44 ; `Delsarte/Hamming/Triples.lean` n'existe pas |
 | Autres minorations linéaires (`A(5,2,3)`, `A(6,2,3)`, `A(15,2,5)`…) | à faire |
 
 Sur l'alphabet binaire, la chaîne est complète de bout en bout : un vecteur de
@@ -623,11 +648,24 @@ lake exe cache get   # oléans mathlib pré-compilés
 lake build
 ```
 
-Reconstruire toute la bibliothèque, mathlib en cache : **~67 s** (2409 jobs).
-Environ 80 % de ce temps est dans les certificats — l'arithmétique rationnelle
-exacte, pas les imports. Seuil : si ce chiffre dépasse deux minutes, regarder
-d'abord ce qui a été ajouté à `Delsarte/Certificate/`, ensuite seulement les
-imports.
+Reconstruire toute la bibliothèque, mathlib en cache : **11 min 06 s**
+(3329 jobs), mesuré le 20 septembre 2026 en supprimant `.lake/build`.
+
+Ce paragraphe affichait « ~67 s (2409 jobs) » et énonçait un seuil d'alerte à
+deux minutes. Le seuil était franchi d'un facteur cinq sans que rien ne le
+signale : un garde-fou qu'on ne remesure jamais ne garde rien. La répartition
+« environ 80 % dans les certificats » n'a pas été remesurée non plus et reste à
+vérifier.
+
+Aucun `timeout-minutes` n'est fixé dans `.github/workflows/`, et le défaut
+GitHub est de six heures : rien n'impose de budget de temps. Le plafond que ce
+dépôt a réellement heurté est la **mémoire** — un `decide` culminant à 22,9 Go
+sur un runner qui en a 16, raconté plus haut. Le temps n'est ici qu'un indicateur
+de dérive, pas une limite.
+
+Seuil, par convention et non par contrainte : si une reconstruction propre
+dépasse **quinze minutes**, regarder d'abord ce qui a été ajouté à
+`Delsarte/Certificate/`, ensuite seulement les imports.
 
 Lean `v4.33.1`, mathlib épinglée sur la même révision. L'épinglage est
 délibéré : pas de bot de mise à jour. Une montée de version silencieuse de

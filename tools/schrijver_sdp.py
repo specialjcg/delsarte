@@ -104,7 +104,7 @@ import delsarte_lp  # noqa: E402
 from schrijver_algebra import C, beta, mult, orbit, realisable  # noqa: E402,F401
 
 
-def build(n, d, even=True):
+def build(n, d, even=False):
     """Return (problem, z, keys): the SDP in z = m x, and orbit -> index of z.
 
     `even` applies the even-weight reduction for even d; switching it off gives
