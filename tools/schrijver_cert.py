@@ -256,14 +256,18 @@ def rat(x, s):
     return Q(round(float(x) * 2 ** s), 2 ** s)
 
 
-def certify(n, d, even=False, s=40, verbose=True):
+def certify(n, d, even=False, s=40, verbose=True, solver="CLARABEL"):
     P = Program(n, d, even)
     nv, L = len(P.keys), len(P.rows)
 
     # 1. Float solve on the scaled program; PSD constraints come in (k, family) order.
+    #    The solver is a source of candidates only: whatever it returns is rounded to
+    #    rationals and re-checked exactly by `check`, so changing it cannot make an
+    #    invalid certificate pass. It can only change which bound is reached, and
+    #    whether one is reached at all -- CLARABEL errors out on (22,10), SCS does not.
     prob, z, keys = S.build(n, d, even)
     assert keys == P.keys, "float and exact programs disagree on variables"
-    prob.solve(solver="CLARABEL")
+    prob.solve(solver=solver)
     psd = [c for c in prob.constraints if isinstance(c, cp.constraints.PSD)]
     ineq = [c for c in prob.constraints if not isinstance(c, cp.constraints.PSD)]
     assert len(psd) == len(P.blocks)
@@ -381,8 +385,10 @@ def check(P, grams, mu):
 def main():
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     even = "--even" in sys.argv
+    solver = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--solver=")),
+                  "CLARABEL")
     n, d = int(args[0]), int(args[1])
-    P, grams, mu = certify(n, d, even)
+    P, grams, mu = certify(n, d, even, solver=solver)
     ok, bound = check(P, grams, mu)
     print(f"A({n},{d}) even={even}: vars={len(P.keys)} blocks={len(P.blocks)} "
           f"rows={len(P.rows)} gram vectors={len(grams)} multipliers={len(mu)}")

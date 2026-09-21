@@ -15,7 +15,12 @@ Integer encoding (see `Sparse.lean`):
 
 Usage:
 
-    schrijver_emit.py n d OUT.lean [--cache FILE]
+    schrijver_emit.py n d OUT.lean [--cache FILE] [--solver=NAME]
+
+`--solver` picks the float solver behind the candidate; the default CLARABEL is
+what every shipped cell was generated with. It is outside the trust base either
+way -- the integer check decides -- but it changes the bound reached, and on
+some cells whether one is reached at all.
 """
 
 from fractions import Fraction as Q
@@ -235,11 +240,13 @@ def main():
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     n, d, out = int(args[0]), int(args[1]), args[2]
     cache = sys.argv[sys.argv.index("--cache") + 1] if "--cache" in sys.argv else None
+    solver = next((a.split("=", 1)[1] for a in sys.argv if a.startswith("--solver=")),
+                  "CLARABEL")
     if cache and Path(cache).exists():
         P = SC.Program(n, d)
         grams, mu = pickle.loads(Path(cache).read_bytes())
     else:
-        P, grams, mu = SC.certify(n, d)
+        P, grams, mu = SC.certify(n, d, solver=solver)
         if cache:
             Path(cache).write_bytes(pickle.dumps((grams, mu)))
     ok, bound = SC.check(P, grams, mu)

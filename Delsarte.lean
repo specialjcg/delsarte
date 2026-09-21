@@ -52,11 +52,13 @@ import Delsarte.SDP.Schrijver19_6
 import Delsarte.Certificate.Schrijver
 import Delsarte.SDP.Schrijver17_6
 import Delsarte.SDP.Schrijver21_10
+import Delsarte.SDP.Schrijver22_10
 import Delsarte.SDP.Schrijver25_10
 import Delsarte.SDP.Schrijver25_12
 import Delsarte.SDP.Schrijver26_12
 import Delsarte.Certificate.Schrijver17_6
 import Delsarte.Certificate.Schrijver21_10
+import Delsarte.Certificate.Schrijver22_10
 import Delsarte.Certificate.Schrijver25_10
 import Delsarte.Certificate.Schrijver25_12
 import Delsarte.Certificate.Schrijver26_12

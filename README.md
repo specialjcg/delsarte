@@ -293,10 +293,10 @@ encodé est une relaxation de Schrijver (non démontré, #44, #45). Borne
 historique : Brouwer donne aujourd'hui 1237. Voir
 `Delsarte/Certificate/Schrijver.lean`, `A_19_6_le_of_relaxation`.
 
-#### Cinq cellules de plus, même hypothèse
+#### Six cellules de plus, même hypothèse
 
 Le générateur `tools/schrijver_emit.py` est paramétré par `(n,d)` : produire une
-cellule coûte une commande et quelques secondes, pas un chantier. Quatre cellules
+cellule coûte une commande et quelques secondes, pas un chantier. Cinq cellules
 ont été ajoutées sur ce principe, plus la première qui a servi de pilote. Toutes
 portent la **même** hypothèse `hrelax` que `A(19,6)` — ce ne sont pas des bornes
 que ce dépôt démontre.
@@ -305,6 +305,7 @@ que ce dépôt démontre.
 |---|---|---|---|---|
 | `A(17,6)` | **352** | 425 | 340 | +12 |
 | `A(21,10)` | **49** | 64 | 47 | +2 |
+| `A(22,10)` | **90** | 95 | 84 | +6 |
 | `A(25,10)` | **505** | 551 | 466 | +39 |
 | `A(25,12)` | **58** | 75 | 55 | +3 |
 | `A(26,12)` | **98** | 113 | 96 | +2 |
@@ -315,12 +316,33 @@ ouverte. `crosscheck_brouwer.py` ne les voit pas, et c'est voulu : `lean_claims.
 refuse tout énoncé portant un binder, donc ces cinq théorèmes ne sont comptés
 nulle part comme bornes démontrées.
 
-`A(22,10)` était prévue et **a échoué** : `cvxpy.error.SolverError: Solver
-'CLARABEL' failed`. Un essai hors dépôt avec SCS converge en `optimal_inaccurate`
-vers ~68, sous les 84 de Brouwer — c'est exactement le verdict `BETTER` que
-`crosscheck_brouwer.py` dit de lire comme un bug avant de le lire comme une
-trouvaille. Le solveur est codé en dur dans `schrijver_cert.py`, et la cellule est
-laissée non faite plutôt que forcée.
+`A(22,10)` résiste à Clarabel : `cvxpy.error.SolverError: Solver 'CLARABEL'
+failed`. Le solveur est désormais un paramètre — `--solver=NAME` sur
+`schrijver_cert.py` et `schrijver_emit.py`, défaut Clarabel inchangé — et avec SCS
+le point converge, la vérification exacte l'accepte : `bound = 90,329449920`, donc
+`A(22,10) ≤ 90`. Contre 95 pour le LP de ce dépôt et **84 pour Brouwer** : comme
+les cinq autres, elle bat le LP maison et pas l'état de l'art.
+
+Le chiffre dépend des tolérances. Un essai hors dépôt avec
+`eps_abs = eps_rel = 1e-9, max_iters = 200000` atteint 89,426040411, soit un cran
+plus bas ; la commande du dépôt, aux réglages SCS par défaut, donne 90. C'est 90
+qui est consigné, parce que c'est celui qu'on rejoue avec ce qui est committé ici.
+
+Une version antérieure de ce paragraphe annonçait que SCS descendait « vers ~68,
+sous les 84 de Brouwer », et en tirait le verdict `BETTER` à lire comme un bug.
+C'était faux. Le 68 était la ligne `after mapping` — l'état du certificat *avant*
+les passes de correction, avec un résidu de 5,2e-01 : pas une borne, un
+intermédiaire. Les passes ne peuvent que faire **monter** la valeur (`bump`
+n'ajoute que des quantités positives), et elles la portent au-delà de 89. Le dépôt
+disait déjà plus haut que `A(22,10)` « converge proprement à 87,97 » ; cette ligne
+n'avait pas été relue avant d'écrire la précédente. Il n'y a ni `BETTER` ni bug —
+seulement un intermédiaire lu comme un résultat.
+
+Changer de solveur ne descend pas les bornes, et `A(26,12)` le montre : SCS y
+certifie 101,301722575 quand Clarabel donne 98,154160785. Le solveur décide
+quel point dual on atteint, pas quel optimum existe ; l'espoir de combler les
+`+2` qui séparent cette cellule de la littérature en changeant d'outil est mort,
+mesure à l'appui.
 
 Clarabel a émis `Solution may be inaccurate` sur les quatre nouvelles cellules.
 C'est le cas nominal, pas une anomalie : le flottant est hors base de confiance,
@@ -390,7 +412,7 @@ certificat se régénère **octet pour octet** depuis zéro, solveur compris.
 | Identité de Gram de Schrijver (§4 du théorème 1), tout `n` | **démontré** — `Delsarte/Hamming/Terwilliger.lean` |
 | Forme quadratique des blocs (19) comme somme de carrés : étape 1, et moitié *positivité* de l'étape 2 | **démontré** — `Delsarte/Hamming/Positivity.lean` |
 | Décomposition en orbites `M̃ = Σ x^t_{i,j} M^t_{i,j}` (seconde moitié de l'étape 2) | **non démontré** — #45 |
-| **Théorème 1 de Schrijver** : blocs (19) PSD pour tout code | **non démontré** — #45 ; les six bornes SDP (`A(19,6)`, `A(17,6)`, `A(21,10)`, `A(25,10)`, `A(25,12)`, `A(26,12)`) portent toutes `hrelax` |
+| **Théorème 1 de Schrijver** : blocs (19) PSD pour tout code | **non démontré** — #45 ; les sept bornes SDP (`A(19,6)`, `A(17,6)`, `A(21,10)`, `A(22,10)`, `A(25,10)`, `A(25,12)`, `A(26,12)`) portent toutes `hrelax` |
 | **Contraintes (20) de Schrijver** | **non démontré** — #44 ; `Delsarte/Hamming/Triples.lean` n'existe pas |
 | Autres minorations linéaires (`A(5,2,3)`, `A(6,2,3)`, `A(15,2,5)`…) | à faire |
 
