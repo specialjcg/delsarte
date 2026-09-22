@@ -34,8 +34,11 @@ Three things are missing, not one. The bridge. The other half of §2: that `M̃`
 `x^t_{i,j}` the program's variables at all — nothing below mentions an orbit. And
 the assembly of §3, which builds the vectors `u_i` and identifies `u_iᵀ M̃ u_j`
 with a block entry; §5 does not list it as a step, but it is not contained in any
-of the four either. So `A_19_6_le_of_relaxation` still carries `hrelax`, and will
-until all three are done.
+of the four either. So `A_19_6_le_of_relaxation` still carries its hypotheses, and
+will until all three are done. Since `Delsarte/Certificate/Relaxation.lean` those
+hypotheses are three separate ones -- `hblocks` for #45, `hrows` for #44, `henc`
+for the encoding -- so what is proved here can be read off the statement rather
+than hidden inside one `Feasible`. Nothing below discharges any of them.
 
 ## Characteristic two
 

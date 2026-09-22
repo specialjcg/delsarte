@@ -298,8 +298,18 @@ historique : Brouwer donne aujourd'hui 1237. Voir
 Le générateur `tools/schrijver_emit.py` est paramétré par `(n,d)` : produire une
 cellule coûte une commande et quelques secondes, pas un chantier. Cinq cellules
 ont été ajoutées sur ce principe, plus la première qui a servi de pilote. Toutes
-portent la **même** hypothèse `hrelax` que `A(19,6)` — ce ne sont pas des bornes
-que ce dépôt démontre.
+portent les **mêmes** hypothèses que `A(19,6)` — ce ne sont pas des bornes que ce
+dépôt démontre.
+
+Ces hypothèses sont désormais **trois** et non une, via
+`Delsarte/Certificate/Relaxation.lean` : `hblocks` (#45, théorème 1), `hrows`
+(#44, contraintes (20)) et `henc` (l'encodage). Regroupées derrière un unique
+`Feasible`, démontrer l'une des deux issues n'aurait rien changé à l'énoncé — le
+lecteur ne pouvait pas voir qu'une moitié était tombée. Le corps de preuve, sept
+fois recopié, est maintenant partagé : `A_le_of_relaxation`. Rien n'est démontré
+de plus pour autant ; `enc_of_feasible`, `blocks_of_feasible` et
+`rows_of_feasible` rebranchent l'ancienne hypothèse groupée sur la nouvelle
+forme, donc aucune cellule ne prouve moins qu'avant.
 
 | cellule | SDP certifié | LP de ce dépôt | meilleure connue (Brouwer) | écart |
 |---|---|---|---|---|
@@ -412,7 +422,7 @@ certificat se régénère **octet pour octet** depuis zéro, solveur compris.
 | Identité de Gram de Schrijver (§4 du théorème 1), tout `n` | **démontré** — `Delsarte/Hamming/Terwilliger.lean` |
 | Forme quadratique des blocs (19) comme somme de carrés : étape 1, et moitié *positivité* de l'étape 2 | **démontré** — `Delsarte/Hamming/Positivity.lean` |
 | Décomposition en orbites `M̃ = Σ x^t_{i,j} M^t_{i,j}` (seconde moitié de l'étape 2) | **non démontré** — #45 |
-| **Théorème 1 de Schrijver** : blocs (19) PSD pour tout code | **non démontré** — #45 ; les sept bornes SDP (`A(19,6)`, `A(17,6)`, `A(21,10)`, `A(22,10)`, `A(25,10)`, `A(25,12)`, `A(26,12)`) portent toutes `hrelax` |
+| **Théorème 1 de Schrijver** : blocs (19) PSD pour tout code | **non démontré** — #45 ; les sept bornes SDP (`A(19,6)`, `A(17,6)`, `A(21,10)`, `A(22,10)`, `A(25,10)`, `A(25,12)`, `A(26,12)`) portent toutes l'hypothèse `hblocks` |
 | **Contraintes (20) de Schrijver** | **non démontré** — #44 ; `Delsarte/Hamming/Triples.lean` n'existe pas |
 | Autres minorations linéaires (`A(5,2,3)`, `A(6,2,3)`, `A(15,2,5)`…) | à faire |
 

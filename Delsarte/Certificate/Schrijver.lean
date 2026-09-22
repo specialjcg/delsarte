@@ -4,6 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Jean-Charles Gouleau
 -/
 import Delsarte.Code.Basic
+import Delsarte.Certificate.Relaxation
 import Delsarte.SDP.Schrijver19_6
 
 /-!
@@ -18,17 +19,23 @@ solve, exact rounding (`tools/schrijver_cert.py`), integer encoding
 
 ## What is proved
 
-`A_19_6_le_of_relaxation`: **if** every nonempty binary code of length 19 and
-minimum distance 6 yields a feasible point `z` of `Schrijver19_6.data` with
-`|C| = 1 + objForm z`, **then** `A(19,6) ≤ 1280`. The certificate part carries no
-assumption: `Schrijver19_6.check_data` and `bnum_lt` are decided by the kernel.
+`A_19_6_le_of_relaxation`: **if** a predicate `P C z` reading *`z` is the vector of
+orbit averages of `C`* satisfies three things -- every nonempty binary code of
+length 19 and minimum distance 6 has such a `z` with `|C| = 1 + objForm z`
+(`henc`), such a `z` makes the blocks positive (`hblocks`), such a `z` satisfies
+the inequalities (`hrows`) -- **then** `A(19,6) ≤ 1280`. The certificate part
+carries no assumption: `Schrijver19_6.check_data` and `bnum_lt` are decided by the
+kernel. The step from there to the bound is
+`Delsarte.Certificate.A_le_of_relaxation`, shared by all seven cells.
 
 ## What is not
 
-The hypothesis. Nothing here shows that `Schrijver19_6.data` is Schrijver's
-program, nor that it is a relaxation: that the constraints (20) hold for every code
-(issue #44) and that the blocks (19) are positive semidefinite (issue #45,
-Schrijver's Theorem 1). Until then the hypothesis is a named assumption.
+The three hypotheses, and they are three on purpose: `hblocks` is issue #45,
+Schrijver's Theorem 1; `hrows` is issue #44, the constraints (20); `henc` is the
+encoding, step 4 of `Delsarte/Hamming/THEOREM1.md` §5. Bundled behind one
+`Feasible`, discharging either would have left the statement looking unchanged.
+Nothing here shows that `Schrijver19_6.data` is Schrijver's program. Until all
+three fall, they are named assumptions.
 
 ## Negative controls
 
@@ -62,20 +69,12 @@ theorem not_check_certBad : data.check certBad = false := by
 /-- **Schrijver's bound `A(19,6) ≤ 1280`**, conditional on the encoded program being
 a relaxation of the code problem. The module docstring says what the hypothesis
 still asks. -/
-theorem A_19_6_le_of_relaxation
-    (hrelax : ∀ C : Code 19 2, C.Nonempty → MinDistAtLeast 6 C →
-      ∃ z : ℕ → ℚ, data.Feasible z ∧ (C.card : ℚ) = 1 + data.objForm z) :
-    A 19 2 6 ≤ 1280 := by
-  obtain ⟨C, hmin, hcard⟩ := exists_code_card_eq_A 19 2 6
-  rcases Finset.eq_empty_or_nonempty C with rfl | hC
-  · rw [Finset.card_empty] at hcard
-    omega
-  obtain ⟨z, hz, hobj⟩ := hrelax C hC hmin
-  have hle := Data.objForm_le check_data hz
-  have hT : (0 : ℚ) < cert.T := by exact_mod_cast (by decide +kernel : 0 < cert.T)
-  have hb : (data.bnum cert : ℚ) < 1280 * cert.T := by exact_mod_cast bnum_lt
-  have hdiv : (data.bnum cert : ℚ) / cert.T < 1280 := (div_lt_iff₀ hT).mpr hb
-  have hlt : C.card < 1281 := by exact_mod_cast (by linarith : (C.card : ℚ) < 1281)
-  omega
+theorem A_19_6_le_of_relaxation {P : Code 19 2 → (ℕ → ℚ) → Prop}
+    (henc : ∀ K : Code 19 2, K.Nonempty → MinDistAtLeast 6 K →
+      ∃ z : ℕ → ℚ, P K z ∧ (K.card : ℚ) = 1 + data.objForm z)
+    (hblocks : ∀ K z, P K z → ∀ b w, 0 ≤ data.blockForm b z w)
+    (hrows : ∀ K z, P K z → ∀ l, 0 ≤ data.rowForm l z) :
+    A 19 2 6 ≤ 1280 :=
+  A_le_of_relaxation check_data (by decide +kernel) bnum_lt henc hblocks hrows
 
 end Delsarte.Certificate.Schrijver

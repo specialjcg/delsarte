@@ -49,6 +49,7 @@ import Delsarte.Code.Octad
 import Delsarte.Lattice.Leech
 import Delsarte.Lattice.Separation
 import Delsarte.SDP.Schrijver19_6
+import Delsarte.Certificate.Relaxation
 import Delsarte.Certificate.Schrijver
 import Delsarte.SDP.Schrijver17_6
 import Delsarte.SDP.Schrijver21_10

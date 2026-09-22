@@ -88,3 +88,13 @@ jobs:
       - name: Check the section 1 sum-of-squares identity
         run: |
           python3 tools/check_quadform.py
+
+      # The averaging identity of section 2, in the form that avoids ever naming
+      # the S_n-invariant matrix `M̃` -- the object `THEOREM1.md` §6 lists as
+      # unproved. Nothing in Lean states this yet, so unlike the two checks above
+      # this one is the only evidence there is, which is exactly why it has to be
+      # replayable by someone other than its author. `n = 8` is behind `--full`:
+      # it costs 37s and exercises no shape `n = 7` does not.
+      - name: Check the section 2 averaging identity
+        run: |
+          python3 tools/check_orbit.py

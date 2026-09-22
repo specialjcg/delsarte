@@ -1,9 +1,11 @@
 # Schrijver's Theorem 1, on paper
 
 Issue #45. The blocks (19) of Schrijver's semidefinite program are positive
-semidefinite for every binary code. This is the missing half of the `hrelax`
-hypothesis of `Delsarte.Certificate.Schrijver.A_19_6_le_of_relaxation`; the other
-half, the constraints (20), is issue #44.
+semidefinite for every binary code. This is the `hblocks` hypothesis of
+`Delsarte.Certificate.Schrijver.A_19_6_le_of_relaxation`; its siblings are `hrows`,
+the constraints (20), issue #44, and `henc`, the encoding. Since
+`Delsarte/Certificate/Relaxation.lean` those are three separate hypotheses rather
+than one `Feasible`, so proving this file's claim will visibly remove one.
 
 Reference: A. Schrijver, *New code upper bounds from the Terwilliger algebra and
 semidefinite programming*, IEEE Trans. Inf. Theory **51** (2005) 2859–2866.
@@ -261,6 +263,16 @@ not proved**.
   that step is proved. The assembly — the vectors `u_i`, and
   `u_iᵀ M̃ u_j = 2^k (B_k)_{i,j}` — is needed and is none of the four steps §5
   lists; that enumeration is incomplete, not the proof.
-  `A_19_6_le_of_relaxation` still carries `hrelax` as a named hypothesis, and the
+  `A_19_6_le_of_relaxation` still carries `hblocks` as a named hypothesis, and the
   module docstring of `Delsarte/Certificate/Schrijver.lean` says so.
+
+  The averaging identity of §2 has a second route, which avoids `M̃` entirely:
+  average the *vector* rather than the matrix, so that
+  `Σ_σ (P_σ u_i)ᵀ M (P_σ u_j) = n! · Σ_t x^t_{i,j} · 2^k · β^t_{i,j,k}`. The inner
+  sum is `gram_eq_pow_mul_beta`, already proved, and positivity is
+  `sum_smul_quadForm_nonneg` with every weight 1, also already proved; what
+  replaces the invariance of `M̃` is that `Σ_σ M[σv,σw]` is constant on the orbit
+  of `(|v|,|w|,|v∧w|)`, a relabelling. `tools/check_orbit.py` replays this in exact
+  arithmetic for `n ≤ 8` with two negative controls. **It is checked, not proved**,
+  and no Lean file states it.
 * **Constraints (20)**, issue #44. Independent of everything above.

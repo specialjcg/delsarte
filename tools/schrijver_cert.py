@@ -48,8 +48,10 @@ The float points differ, the rounding differs, and the bound is the same. That
 is the property this file exists for and it had never been checked anywhere but
 on the author's machine; both negative controls fired in both replays. Note what
 it does *not* say: the certified value is an upper bound on the program's
-optimum, and `A_19_6_le_of_relaxation` still carries `hrelax`, the unproved
-claim that the encoded program relaxes A(n, d) at all (issues #44, #45).
+optimum, and `A_19_6_le_of_relaxation` still carries the unproved claim that the
+encoded program relaxes A(n, d) at all.  That claim is now three named
+hypotheses rather than one -- `hblocks` (issue #45), `hrows` (issue #44) and
+`henc`, the encoding -- so discharging either issue will show in the statement.
 
 The repair is what makes this robust, and it is worth stating how far it
 reaches: it has been driven from starting points whose residual was 1.7e-01 and
