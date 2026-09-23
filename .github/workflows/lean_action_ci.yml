@@ -98,3 +98,15 @@ jobs:
       - name: Check the section 2 averaging identity
         run: |
           python3 tools/check_orbit.py
+
+      # The bridge of `Delsarte/Hamming/Orbit.lean`, recomputed from bitmask
+      # arithmetic. The Lean theorem holds for every `n`, so this adds no
+      # coverage of the identity -- but the identity is invariant under
+      # replacing `interDist`, because both of its sides use it, so a definition
+      # that drifted from `|(X △ Y) ∩ (X △ Z)|` would keep proving the same
+      # theorem about the wrong numbers. This step is what pins the statistic to
+      # the one Schrijver's paper writes, and it imports nothing the Lean side
+      # or the generator uses.
+      - name: Check the triple counts against the orbit sums
+        run: |
+          python3 tools/check_triples.py

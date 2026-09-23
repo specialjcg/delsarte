@@ -15,6 +15,7 @@ import Delsarte.Hamming.FeasibleQ
 import Delsarte.Hamming.Terwilliger
 import Delsarte.Hamming.Triples
 import Delsarte.Hamming.Positivity
+import Delsarte.Hamming.Orbit
 import Delsarte.Certificate.IntTable
 import Delsarte.Certificate.Verify
 import Delsarte.Certificate.Integer
