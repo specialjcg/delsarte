@@ -13,9 +13,10 @@ Equation numbers below are that paper's.
 
 Written in English to match the Lean docstrings it is meant to become. Three
 pieces are machine-checked: §4 in `Delsarte/Hamming/Terwilliger.lean`, §1 and the
-positivity half of §2 in `Delsarte/Hamming/Positivity.lean`, and the
-identification of the program's variables with orbit averages of `M` in
-`Delsarte/Hamming/Orbit.lean`. The rest is still only the argument a Lean proof
+positivity half of §2 in `Delsarte/Hamming/Positivity.lean`, and — in
+`Delsarte/Hamming/Orbit.lean` — both the identification of the program's variables
+with orbit averages of `M` and the invariance half of the orbit constancy those
+averages need. The rest is still only the argument a Lean proof
 would follow, and what it does not close is named in *What is not proved* at the
 end.
 
@@ -102,9 +103,13 @@ That the two descriptions of `x^t_{i,j}` agree — the orbit average of `M(C)` u
 here, and the normalized triple count `xT` that `Delsarte/Hamming/Triples.lean`
 defines from `λ^t_{i,j}` — is `lambdaT_eq_orbit_sum`, in
 `Delsarte/Hamming/Orbit.lean`. Before it the two were separate definitions in
-separate files with nothing relating them. What is still missing here is the
-`Sₙ`-invariance that turns the orbit *average* into a *common value* on the orbit,
-which is the form §3 uses.
+separate files with nothing relating them. What is still missing here is what turns
+the orbit *average* into a *common value* on the orbit, which is the form §3 uses.
+That splits in two. The average is invariant under the action —
+`orbitSum_permWord`, proved. But the orbit is written above as the set of pairs
+with a given `(i, j, t)`, and invariance only transfers to that description if such
+a set *is* one orbit of `Sₙ`. That second statement is not proved anywhere; see
+§6.
 
 ## 3. From M̃ to the blocks
 
@@ -256,9 +261,16 @@ The other half of §2 is **partly** formalized, in `Delsarte/Hamming/Orbit.lean`
   `Triples.lean`, with no statement relating them, so the `x^t_{i,j}` were a
   definition standing beside `M` rather than an orbit average of it.
 
+* `permWord`, `hammingDist_permWord`, `interDist_permWord`, `orbit_permWord`,
+  `orbitSum_permWord` — the coordinate action, that it preserves the three
+  statistics, and that `Σ_σ M[σv,σw]` is unchanged by moving `(v,w)` along it. The
+  last is a reindexing of a sum over a group by `ρ = τσ` and nothing more.
+
 So "step 2" is done in the sense of positivity, done in the sense that the orbit
-average is the right object, and **not** done in the sense that the average is
-constant on orbits — the `Sₙ`-invariance of `M̃`, which is the form §3 consumes.
+average is the right object, done in the sense that the average is invariant under
+the action, and **not** done in the sense that this invariance reaches a class of
+pairs described by `(i,j,t)` — which needs those classes to be single orbits, and
+is the form §3 consumes.
 
 A caveat that belongs beside `lambdaT_eq_orbit_sum` rather than against it: both
 of its sides are written with the same `interDist`, and its proof never looks
@@ -272,10 +284,11 @@ passes vacuously, for that same reason.
 arithmetic, with two negative controls: a perturbed entry must break it, and an
 arbitrary symmetric matrix must be able to drive the form negative.
 
-What remains is step 4, the orbit *constancy* of §2, the assembly of §3 — the
-vectors `u_i`, and the identification of `u_iᵀ M̃ u_j` with a block entry — and a
-type transport that §5 does not list either, described in §6. §5 enumerates four
-steps and that assembly is none of them, so **Theorem 1 itself is not proved**.
+What remains is step 4, the *transitivity* half of the orbit constancy of §2, the
+assembly of §3 — the vectors `u_i`, and the identification of `u_iᵀ M̃ u_j` with a
+block entry — and a type transport that §5 does not list either, described in §6.
+§5 enumerates four steps and that assembly is none of them, so **Theorem 1 itself
+is not proved**.
 
 ## 6. What is not proved
 
@@ -300,12 +313,22 @@ steps and that assembly is none of them, so **Theorem 1 itself is not proved**.
   proved; that `x^t_{i,j}` is the orbit sum of `M` is `lambdaT_eq_orbit_sum`,
   proved; the inner sum is `gram_eq_pow_mul_beta`, proved *in its own type* and
   subject to the next bullet. What replaces the invariance of `M̃` is that
-  `Σ_σ M[σv,σw]` is constant on the orbit of `(|v|,|w|,|v∧w|)`, a relabelling —
-  and that is **not** proved.
+  `Σ_σ M[σv,σw]` is constant on the class `(|v|,|w|,|v∧w|)`. Earlier versions of
+  this document called that "a relabelling". It is two statements and only one of
+  them is:
+
+  * **invariance** — `orbitSum C (P_τ v) (P_τ w) = orbitSum C v w`, reindexing a
+    sum over a group. That is `orbitSum_permWord`, **proved**.
+  * **transitivity** — that a class of pairs sharing the three statistics *is* one
+    orbit. **Not proved**, and not a relabelling: it takes a permutation built from
+    a bijection between the four cells `v∧w`, `v\w`, `w\v`, `(v∪w)ᶜ`, of sizes `t`,
+    `i−t`, `j−t`, `n−i−j+t`. Calling the whole thing a relabelling hid this half.
 
   `tools/check_orbit.py` replays the whole route in exact arithmetic for `n ≤ 8`
-  with two negative controls. **It is checked, not proved**, and no Lean file
-  states the identity itself.
+  with two negative controls, and `tools/check_orbit_transitive.py` checks
+  transitivity itself for `n ≤ 6` — each class one orbit, of size `mult`,
+  recomputed from factorials rather than imported. Both are **checked, not
+  proved**: no Lean file states the route, and none states transitivity.
 
 * **A type transport, which no section above costs.** `gram` and
   `gram_eq_pow_mul_beta` in `Delsarte/Hamming/Terwilliger.lean` sum over
@@ -315,4 +338,11 @@ steps and that assembly is none of them, so **Theorem 1 itself is not proved**.
   silently skips the transport between the two, whose cost is unmeasured.
   `multOn_card` is the precedent — the one place in `Terwilliger.lean` that
   already pays for a change of type — and it is not free.
+
+  This is not a separate task from the transitivity above. `multFinset` in
+  `Terwilliger.lean` is *the same set of pairs* as `orbit` in `Orbit.lean` — the
+  same three conditions — written over `Finset (Fin n)` instead of `Word n 2`, with
+  nothing in the repository relating the two. The four cells a transitivity proof
+  has to match are `Finset`s, so that proof lands in the first type while the
+  statement it is needed for lives in the second. Whoever does either does both.
 * **Constraints (20)**, issue #44. Independent of everything above.
