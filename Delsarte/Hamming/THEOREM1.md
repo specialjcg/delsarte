@@ -11,10 +11,13 @@ Reference: A. Schrijver, *New code upper bounds from the Terwilliger algebra and
 semidefinite programming*, IEEE Trans. Inf. Theory **51** (2005) 2859–2866.
 Equation numbers below are that paper's.
 
-Written in English to match the Lean docstrings it is meant to become. §4 is now
-machine-checked, in `Delsarte/Hamming/Terwilliger.lean`; the rest is still only
-the argument a Lean proof would follow, and what it does not close is named in
-*What is not proved* at the end.
+Written in English to match the Lean docstrings it is meant to become. Three
+pieces are machine-checked: §4 in `Delsarte/Hamming/Terwilliger.lean`, §1 and the
+positivity half of §2 in `Delsarte/Hamming/Positivity.lean`, and the
+identification of the program's variables with orbit averages of `M` in
+`Delsarte/Hamming/Orbit.lean`. The rest is still only the argument a Lean proof
+would follow, and what it does not close is named in *What is not proved* at the
+end.
 
 ## 0. What is being proved, exactly
 
@@ -94,6 +97,14 @@ the orbit divided by the orbit size
 
 which is where that normalization in `schrijver_algebra.py` comes from. These
 `x^t_{i,j}` are the program's variables.
+
+That the two descriptions of `x^t_{i,j}` agree — the orbit average of `M(C)` used
+here, and the normalized triple count `xT` that `Delsarte/Hamming/Triples.lean`
+defines from `λ^t_{i,j}` — is `lambdaT_eq_orbit_sum`, in
+`Delsarte/Hamming/Orbit.lean`. Before it the two were separate definitions in
+separate files with nothing relating them. What is still missing here is the
+`Sₙ`-invariance that turns the orbit *average* into a *common value* on the orbit,
+which is the form §3 uses.
 
 ## 3. From M̃ to the blocks
 
@@ -235,20 +246,36 @@ Step 1, and the positivity half of step 2, are formalized in
   nonnegative combination of nonnegative forms is nonnegative. No group theory is
   used, only that the weights are nonnegative.
 
-The other half of §2 is **not** formalized: that `M̃` is `Sₙ`-invariant, hence
-equal to `Σ x^t_{i,j} M^t_{i,j}`, which is what makes the `x^t_{i,j}` the
-program's variables at all. Nothing in `Positivity.lean` mentions an orbit. So
-"step 2" is done in the sense of positivity and not in the sense of the change of
-variables that §3 then consumes.
+The other half of §2 is **partly** formalized, in `Delsarte/Hamming/Orbit.lean`:
+
+* `lambdaT_eq_orbit_sum` — the sum of the matrix of (19) over the orbit `(i,j,t)`
+  is the triple count `λ^t_{i,j}`. The bijection is `(X,Y,Z) ↦ (z, X+Y, X+Z)`,
+  fibred over the orbit; translation invariance of the two statistics is
+  `hammingDist_translate` and `interDist_translate`. Until this file `M` lived
+  over words in `Positivity.lean` and `λ` over triples of codewords in
+  `Triples.lean`, with no statement relating them, so the `x^t_{i,j}` were a
+  definition standing beside `M` rather than an orbit average of it.
+
+So "step 2" is done in the sense of positivity, done in the sense that the orbit
+average is the right object, and **not** done in the sense that the average is
+constant on orbits — the `Sₙ`-invariance of `M̃`, which is the form §3 consumes.
+
+A caveat that belongs beside `lambdaT_eq_orbit_sum` rather than against it: both
+of its sides are written with the same `interDist`, and its proof never looks
+inside that definition, so it holds for any function of the two differences. The
+theorem does not pin the statistic to `|(X △ Y) ∩ (X △ Z)|`.
+`tools/check_triples.py` is what does, recomputing both sides from bitmask
+arithmetic, with guards that corrupt the orbit side only — corrupting both at once
+passes vacuously, for that same reason.
 
 `tools/check_quadform.py` pre-checks the §1 identity in exact rational
 arithmetic, with two negative controls: a perturbed entry must break it, and an
 arbitrary symmetric matrix must be able to drive the form negative.
 
-What remains is step 4, the orbit decomposition of §2, and the assembly of §3 —
-the vectors `u_i`, and the identification of `u_iᵀ M̃ u_j` with a block entry. §5
-enumerates four steps and that assembly is none of them, so **Theorem 1 itself is
-not proved**.
+What remains is step 4, the orbit *constancy* of §2, the assembly of §3 — the
+vectors `u_i`, and the identification of `u_iᵀ M̃ u_j` with a block entry — and a
+type transport that §5 does not list either, described in §6. §5 enumerates four
+steps and that assembly is none of them, so **Theorem 1 itself is not proved**.
 
 ## 6. What is not proved
 
@@ -257,22 +284,35 @@ not proved**.
   check, not a derivation. It is not on the critical path — `β` is *defined* by
   (7') — but anyone comparing against the paper needs to know it is an
   unverified bridge to the paper's notation.
-* **Step 4 of §5, the orbit decomposition of §2, and the assembly of §3.** Not
-  formalized. The orbit decomposition is what makes the `x^t_{i,j}` the program's
-  variables at all; §5 counts it inside step 2, but only the positivity half of
-  that step is proved. The assembly — the vectors `u_i`, and
-  `u_iᵀ M̃ u_j = 2^k (B_k)_{i,j}` — is needed and is none of the four steps §5
-  lists; that enumeration is incomplete, not the proof.
-  `A_19_6_le_of_relaxation` still carries `hblocks` as a named hypothesis, and the
-  module docstring of `Delsarte/Certificate/Schrijver.lean` says so.
+* **Step 4 of §5, the orbit constancy of §2, and the assembly of §3.** Not
+  formalized. The orbit *decomposition* — that the `x^t_{i,j}` are orbit averages
+  of `M` and not an unrelated definition — is proved, in
+  `Delsarte/Hamming/Orbit.lean`; the *constancy* that §3 consumes is not. The
+  assembly — the vectors `u_i`, and `u_iᵀ M̃ u_j = 2^k (B_k)_{i,j}` — is needed
+  and is none of the four steps §5 lists; that enumeration is incomplete, not the
+  proof. `A_19_6_le_of_relaxation` still carries `hblocks` as a named hypothesis,
+  and the module docstring of `Delsarte/Certificate/Schrijver.lean` says so.
 
   The averaging identity of §2 has a second route, which avoids `M̃` entirely:
   average the *vector* rather than the matrix, so that
-  `Σ_σ (P_σ u_i)ᵀ M (P_σ u_j) = n! · Σ_t x^t_{i,j} · 2^k · β^t_{i,j,k}`. The inner
-  sum is `gram_eq_pow_mul_beta`, already proved, and positivity is
-  `sum_smul_quadForm_nonneg` with every weight 1, also already proved; what
-  replaces the invariance of `M̃` is that `Σ_σ M[σv,σw]` is constant on the orbit
-  of `(|v|,|w|,|v∧w|)`, a relabelling. `tools/check_orbit.py` replays this in exact
-  arithmetic for `n ≤ 8` with two negative controls. **It is checked, not proved**,
-  and no Lean file states it.
+  `Σ_σ (P_σ u_i)ᵀ M (P_σ u_j) = n! · Σ_t x^t_{i,j} · 2^k · β^t_{i,j,k}`.
+  Positivity of the left side is `sum_smul_quadForm_nonneg` with every weight 1,
+  proved; that `x^t_{i,j}` is the orbit sum of `M` is `lambdaT_eq_orbit_sum`,
+  proved; the inner sum is `gram_eq_pow_mul_beta`, proved *in its own type* and
+  subject to the next bullet. What replaces the invariance of `M̃` is that
+  `Σ_σ M[σv,σw]` is constant on the orbit of `(|v|,|w|,|v∧w|)`, a relabelling —
+  and that is **not** proved.
+
+  `tools/check_orbit.py` replays the whole route in exact arithmetic for `n ≤ 8`
+  with two negative controls. **It is checked, not proved**, and no Lean file
+  states the identity itself.
+
+* **A type transport, which no section above costs.** `gram` and
+  `gram_eq_pow_mul_beta` in `Delsarte/Hamming/Terwilliger.lean` sum over
+  `Finset (Fin n)`; `gramMat` and the matrix of §1 in
+  `Delsarte/Hamming/Positivity.lean` sum over `Word n 2`. Calling the inner sum of
+  the route above "already proved" is true of the statement *in its own type* and
+  silently skips the transport between the two, whose cost is unmeasured.
+  `multOn_card` is the precedent — the one place in `Terwilliger.lean` that
+  already pays for a change of type — and it is not free.
 * **Constraints (20)**, issue #44. Independent of everything above.
