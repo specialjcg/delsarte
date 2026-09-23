@@ -110,3 +110,16 @@ jobs:
       - name: Check the triple counts against the orbit sums
         run: |
           python3 tools/check_triples.py
+
+      # Orbit constancy splits in two, and `Delsarte/Hamming/Orbit.lean` proves
+      # only one half: `orbitSum_permWord`, the invariance of `Σ_σ M[σv,σw]`
+      # under the action, which is a reindexing of a sum over a group. The other
+      # half -- that a class of pairs sharing `(|v|,|w|,|v∧w|)` is a single
+      # `S_n`-orbit -- is what carries the invariance over to the statistics, and
+      # no Lean file states it. So this step is the only evidence there is, like
+      # `check_orbit.py` and unlike the three above it. Only transitivity is
+      # measured: replaying the proved half would test nothing. The guards weaken
+      # the group, or the partition, never the side being compared against.
+      - name: Check that the statistic classes are single orbits
+        run: |
+          python3 tools/check_orbit_transitive.py

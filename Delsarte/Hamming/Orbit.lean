@@ -5,6 +5,7 @@ Authors: Jean-Charles Gouleau
 -/
 import Delsarte.Hamming.Positivity
 import Delsarte.Hamming.Triples
+import Mathlib.Data.Fintype.Perm
 
 /-!
 # The triple counts are the orbit sums of the matrix of (19)
@@ -49,14 +50,15 @@ across the two. This file is what makes it statable. That document predates
 
 ## What this file does not do
 
-Everything else. The orbit constancy of `Σ_σ M[σv,σw]`, the assembly of §3, and
-step 4 — the bridge from a quadratic form on words to `Data.blockForm`, which is a
-form on encoded lists — are all untouched. `hblocks` still stands and no bound
-stops being conditional.
+The assembly of §3 and step 4 — the bridge from a quadratic form on words to
+`Data.blockForm`, which is a form on encoded lists — are untouched, and of the
+orbit constancy of `Σ_σ M[σv,σw]` only the invariance half is below. `hblocks`
+still stands and no bound stops being conditional.
 
 There is also a type gap this file does not close: `gram` in
 `Delsarte/Hamming/Terwilliger.lean` sums over `Finset (Fin n)` while `gramMat`
-sums over `Word n 2`. Nothing below needs the transport, but the §6 identity will.
+sums over `Word n 2`. Nothing below needs the transport, but the §6 identity will,
+and so does the transitivity half described in the section on the `Sₙ` action.
 
 ## A note on tactics
 
@@ -239,6 +241,105 @@ theorem lambdaT_eq_orbit_sum (C : Code n 2) (i j t : ℕ) :
   push_cast
   exact Finset.sum_congr rfl fun p _ => gramMat_eq_card C p.1 p.2
 
+/-! ## The `Sₙ` action, and the half of orbit constancy that is free
+
+Issue #47. `THEOREM1.md` §6 needs `Σ_σ M[σv, σw]` to be constant on
+`orbit n i j t` and calls that "a relabelling". It is two statements, and only one
+of them is a relabelling:
+
+* **invariance** — `orbitSum C (P_τ v) (P_τ w) = orbitSum C v w`. Reindexing a sum
+  over a group by `ρ = τσ`. That is `orbitSum_permWord` below, and it is free.
+* **transitivity** — two pairs with the same `(|v|, |w|, |v ∧ w|)` differ by a
+  permutation. **Not** a relabelling, and **not** proved here. `orbit` is defined by
+  the three statistics rather than as an orbit of the action, so nothing below
+  connects the two. A proof has to build a permutation out of a bijection between
+  the four cells `v ∧ w`, `v \ w`, `w \ v`, `(v ∪ w)ᶜ`, of sizes `t`, `i − t`,
+  `j − t`, `n − i − j + t`. That is the decomposition
+  `mult n i j t = n! / (t! (i−t)! (j−t)! (n−i−j+t)!)` counts, and in
+  `Delsarte/Hamming/Terwilliger.lean` `multFinset` is that very set of pairs — over
+  `Finset (Fin n)`, where `orbit` is over `Word n 2`. So the missing half carries a
+  type transport with it, and `multOn_card` is what that costs.
+
+`tools/check_orbit_transitive.py` stands in for transitivity meanwhile: for `n ≤ 6`
+it checks that each statistic class *is* one `Sₙ`-orbit and that its size is
+`mult`, with two guards that weaken one side only — a proper subgroup in place of
+`Sₙ`, and a partition that forgets the overlap.
+
+The caveat recorded against `lambdaT_eq_orbit_sum` applies here too, and for the
+same reason: every proof below does nothing but reindex coordinates, so each lemma
+holds for any statistic defined as the cardinality of a filter on coordinates.
+Nothing here pins `interDist` down either. -/
+
+/-- The coordinate permutation `P_σ`, acting on words by precomposition. This is
+the action `THEOREM1.md` §2 writes `σ · M = P_σ M P_σᵀ`, on the index side. -/
+def permWord (σ : Equiv.Perm (Fin n)) : Word n 2 ≃ Word n 2 where
+  toFun v := fun c => v (σ c)
+  invFun v := fun c => v (σ.symm c)
+  left_inv v := by funext c; simp
+  right_inv v := by funext c; simp
+
+@[simp] theorem permWord_apply (σ : Equiv.Perm (Fin n)) (v : Word n 2) (c : Fin n) :
+    permWord σ v c = v (σ c) := rfl
+
+@[simp] theorem permWord_zero (σ : Equiv.Perm (Fin n)) :
+    permWord σ (0 : Word n 2) = 0 := rfl
+
+/-- The action composes, contravariantly: precomposition turns `σ` after `τ` into
+multiplication `τ * σ`. This is the whole content of the invariance below. -/
+theorem permWord_trans (σ τ : Equiv.Perm (Fin n)) (v : Word n 2) :
+    permWord σ (permWord τ v) = permWord (τ * σ) v := by
+  funext c
+  simp [Equiv.Perm.mul_apply]
+
+/-- Permuting coordinates preserves the Hamming distance. Mathlib's
+`hammingDist_comp` reindexes the *values*, not the index type, so this is proved
+here. -/
+theorem hammingDist_permWord (σ : Equiv.Perm (Fin n)) (x y : Word n 2) :
+    hammingDist (permWord σ x) (permWord σ y) = hammingDist x y :=
+  Finset.card_bij' (fun c _ => σ c) (fun c _ => σ.symm c)
+    (fun _ hc => Finset.mem_filter.mpr ⟨Finset.mem_univ _, (Finset.mem_filter.mp hc).2⟩)
+    (fun _ hc => Finset.mem_filter.mpr ⟨Finset.mem_univ _, by
+      simpa using (Finset.mem_filter.mp hc).2⟩)
+    (fun c _ => σ.symm_apply_apply c)
+    (fun c _ => σ.apply_symm_apply c)
+
+/-- Permuting coordinates preserves the triple overlap, for the same reason. -/
+theorem interDist_permWord (σ : Equiv.Perm (Fin n)) (X Y Z : Word n 2) :
+    interDist (permWord σ X) (permWord σ Y) (permWord σ Z) = interDist X Y Z :=
+  Finset.card_bij' (fun c _ => σ c) (fun c _ => σ.symm c)
+    (fun _ hc => Finset.mem_filter.mpr ⟨Finset.mem_univ _, (Finset.mem_filter.mp hc).2⟩)
+    (fun _ hc => Finset.mem_filter.mpr ⟨Finset.mem_univ _, by
+      simpa using (Finset.mem_filter.mp hc).2⟩)
+    (fun c _ => σ.symm_apply_apply c)
+    (fun c _ => σ.apply_symm_apply c)
+
+/-- The action stabilises each orbit. Note what this does *not* say: that the
+action is transitive on it. -/
+theorem orbit_permWord {i j t : ℕ} (σ : Equiv.Perm (Fin n)) {p : Word n 2 × Word n 2}
+    (hp : p ∈ orbit n i j t) : (permWord σ p.1, permWord σ p.2) ∈ orbit n i j t := by
+  obtain ⟨hv, hw, hvw⟩ := mem_orbit.mp hp
+  refine mem_orbit.mpr ⟨?_, ?_, ?_⟩
+  · rw [← permWord_zero σ, hammingDist_permWord]; exact hv
+  · rw [← permWord_zero σ, hammingDist_permWord]; exact hw
+  · rw [← permWord_zero σ, interDist_permWord]; exact hvw
+
+/-- `Σ_σ M[σv, σw]`, the quantity §6 of `THEOREM1.md` averages. It is a sum over
+the group, not over an orbit; `orbit` does not appear. -/
+def orbitSum (C : Code n 2) (v w : Word n 2) : ℚ :=
+  ∑ σ : Equiv.Perm (Fin n), gramMat C C (permWord σ v) (permWord σ w)
+
+/-- **The free half of orbit constancy.** `Σ_σ M[σv, σw]` is unchanged by moving
+`(v, w)` along the action. This is a reindexing of a sum over a group and nothing
+else — in particular it says nothing about two pairs that merely share the three
+statistics, which is the half `tools/check_orbit_transitive.py` checks and no Lean
+file proves. -/
+theorem orbitSum_permWord (C : Code n 2) (τ : Equiv.Perm (Fin n)) (v w : Word n 2) :
+    orbitSum C (permWord τ v) (permWord τ w) = orbitSum C v w := by
+  simp only [orbitSum, permWord_trans]
+  exact Fintype.sum_equiv
+    ⟨(τ * ·), (τ⁻¹ * ·), fun σ => inv_mul_cancel_left τ σ, fun σ => mul_inv_cancel_left τ σ⟩
+    _ _ fun _ => rfl
+
 /-! ## Negative controls
 
 On `C = {00, 11}` the kernel decides the counts. -/
@@ -272,6 +373,45 @@ theorem orbit_sum_control_offdiag :
         (({![0, 0], ![1, 1]} : Code 2 2).filter fun z =>
           z + p.1 ∈ ({![0, 0], ![1, 1]} : Code 2 2) ∧
             z + p.2 ∈ ({![0, 0], ![1, 1]} : Code 2 2)).card = 2 := by
+  decide
+
+/-! ### Controls for the `Sₙ` action
+
+Three things could make the section above vacuous, and each has a control. -/
+
+/-- **Negative control.** `permWord` is not the identity. Were it — a `σ` dropped
+somewhere in the definition — every lemma of that section would still be true and
+would say nothing. -/
+theorem permWord_control_ne_id :
+    permWord (Equiv.swap (0 : Fin 2) 1) ![0, 1] ≠ ![0, 1] := by decide
+
+/-- **Negative control, the sharp one.** `orbit` is *not* stable under an arbitrary
+bijection of `Word n 2`. Translation by a nonzero word is one, and it even
+preserves pairwise Hamming distance — that is `hammingDist_translate` above — yet
+it moves this pair off the orbit, because it does not preserve the weights. So
+`orbit_permWord` is a statement about coordinate permutations and not, like
+`quadForm_comp` in `Delsarte/Hamming/Positivity.lean`, one that holds for every
+`e : Word n 2 ≃ Word n 2`. -/
+theorem orbit_control_not_translate :
+    ((![1, 0], ![1, 0]) : Word 2 2 × Word 2 2) ∈ orbit 2 1 1 1 ∧
+      (((![1, 0] : Word 2 2) + ![1, 0], (![1, 0] : Word 2 2) + ![1, 0]))
+        ∉ orbit 2 1 1 1 := by
+  decide
+
+/-- **Negative control.** The average over `Sₙ` in `orbitSum` is doing work: a
+single entry of the matrix is not invariant. On `C = {00, 10}` the entry at
+`(10, 10)` counts two translations and the entry at its transpose `(01, 01)`
+counts none. Stated over `ℕ` through `gramMat_eq_card`, since the `ℚ`-valued form
+does not reduce. -/
+theorem gramMat_control_not_invariant :
+    (({![0, 0], ![1, 0]} : Code 2 2).filter fun z =>
+        z + ![1, 0] ∈ ({![0, 0], ![1, 0]} : Code 2 2) ∧
+          z + ![1, 0] ∈ ({![0, 0], ![1, 0]} : Code 2 2)).card
+      ≠ (({![0, 0], ![1, 0]} : Code 2 2).filter fun z =>
+        z + permWord (Equiv.swap (0 : Fin 2) 1) ![1, 0] ∈
+            ({![0, 0], ![1, 0]} : Code 2 2) ∧
+          z + permWord (Equiv.swap (0 : Fin 2) 1) ![1, 0] ∈
+            ({![0, 0], ![1, 0]} : Code 2 2)).card := by
   decide
 
 end Delsarte.Hamming
